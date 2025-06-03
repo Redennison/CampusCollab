@@ -77,10 +77,10 @@ export default function Component() {
                 }}
               >
                 <motion.div
-                  initial={{ scale: 0, rotate: -180 }}
-                  animate={{ scale: 1, rotate: 0 }}
+                  initial={{ scale: 0}}
+                  animate={{ scale: 1}}
                   transition={{
-                    duration: 1.5,
+                    duration: 1,
                     ease: "easeOut",
                     delay: 0.5,
                   }}
