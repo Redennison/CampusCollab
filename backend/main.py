@@ -3,12 +3,8 @@ from pydantic import BaseModel
 from passlib.context import CryptContext
 from jose import jwt
 from datetime import datetime, timedelta, timezone
-
-# Create a FastAPI app instance
-app = FastAPI()
-
-# Password hashing context using bcrypt
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+from services import user_service
+from supabase_client import supabase
 
 # Secret key for JWT encoding (store in environment variables in future)
 SECRET_KEY = "your-secret-key"
@@ -20,8 +16,11 @@ class SignUpOrInRequest(BaseModel):
     email: str
     password: str
 
-# In-memory user store (for testing purposes only)
-users_db = {}
+# Create a FastAPI app instance
+app = FastAPI()
+
+# Password hashing context using bcrypt
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 """
 Sign up a new user with email and password.
@@ -39,7 +38,7 @@ def sign_up(request: SignUpOrInRequest):
     hashed_password = pwd_context.hash(request.password)
 
     # Store the user with hashed password
-    users_db[request.email] = hashed_password
+    user_service.insert_user(request.email, hashed_password)
     return {"message": "Sign up successful"}
 
 """
@@ -50,7 +49,8 @@ Returns a JWT if authentication is successful.
 def sign_in(request: SignUpOrInRequest):
 
     # Check if the user exists
-    hashed_password = users_db.get(request.email)
+    user = user_service.get_user_by_email(request.email)
+    hashed_password = user.data.get("password")
     if not hashed_password:
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
