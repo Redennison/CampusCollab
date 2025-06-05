@@ -65,9 +65,7 @@ export default function OnboardingPage() {
     }
   };
 
-  const handleSubmit = async () => {
-   
-  };
+  const handleSubmit = async () => {};
 
   const isStepValid = () => {
     switch (currentStep) {
@@ -90,19 +88,19 @@ export default function OnboardingPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4 sm:py-8">
         <div className="max-w-3xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Welcome to MatchaGoose
+          <div className="mb-4 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+              Welcome to CoFounder
             </h1>
-            <p className="text-gray-600">
+            <p className="text-sm sm:text-base text-gray-600">
               Let&apos;s get to know you better. This will help us match you
-              with the right people.
+              with the right co-founder.
             </p>
           </div>
 
-          <div className="mb-8">
+          <div className="mb-4 sm:mb-8">
             <div className="flex justify-between items-center">
               {steps.map((step, index) => (
                 <div key={step.id} className="flex-1 relative">
@@ -111,15 +109,17 @@ export default function OnboardingPage() {
                       index <= currentStep ? "bg-green-500" : "bg-gray-200"
                     }`}
                   />
-                  <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2">
+                  <div className="absolute -bottom-6 sm:-bottom-8 left-1/2 transform -translate-x-1/2">
                     <span
-                      className={`text-sm ${
-                        index === currentStep
-                          ? "text-green-500 font-medium"
+                      className={`text-sm font-medium ${
+                        currentStep === index
+                          ? "text-green-600"
                           : "text-gray-500"
                       }`}
                     >
-                      {step.title}
+                      <span className="hidden pb-5 md:inline">
+                        {step.title}
+                      </span>
                     </span>
                   </div>
                 </div>
@@ -127,7 +127,7 @@ export default function OnboardingPage() {
             </div>
           </div>
 
-          <Card className="p-6">
+          <Card className="p-4 sm:p-6">
             {currentStep === 0 && (
               <PersonalInfo
                 formData={{
@@ -177,11 +177,12 @@ export default function OnboardingPage() {
               />
             )}
 
-            <div className="flex justify-between mt-8">
+            <div className="flex justify-between mt-6 sm:mt-8">
               <Button
                 variant="outline"
                 onClick={handleBack}
                 disabled={currentStep === 0}
+                className="text-sm sm:text-base"
               >
                 Back
               </Button>
@@ -189,7 +190,7 @@ export default function OnboardingPage() {
                 <Button
                   onClick={handleSubmit}
                   disabled={!isStepValid()}
-                  className="bg-green-500 hover:bg-green-600"
+                  className="bg-green-500 hover:bg-green-600 text-sm sm:text-base"
                 >
                   Complete
                 </Button>
@@ -197,7 +198,7 @@ export default function OnboardingPage() {
                 <Button
                   onClick={handleNext}
                   disabled={!isStepValid()}
-                  className="bg-green-500 hover:bg-green-600"
+                  className="bg-green-500 hover:bg-green-600 text-sm sm:text-base"
                 >
                   Next
                 </Button>

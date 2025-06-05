@@ -51,40 +51,42 @@ export function Interests({ formData, onUpdate }: InterestsProps) {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Interests & Expertise</CardTitle>
+        <CardTitle className="text-lg sm:text-xl">
+          Interests & Expertise
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-4">
-          <Label>
+      <CardContent className="space-y-4 sm:space-y-6">
+        <div className="space-y-3 sm:space-y-4">
+          <Label className="text-sm sm:text-base">
             Domain/Specialization <span className="text-red-500">*</span>
           </Label>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
             {domains.map((domain) => (
               <Badge
                 key={domain}
                 variant={
                   formData.domain.includes(domain) ? "default" : "outline"
                 }
-                className={`cursor-pointer ${
+                className={`cursor-pointer text-xs sm:text-sm ${
                   !formData.domain.includes(domain) ? "hover:bg-green-100" : ""
                 }`}
                 onClick={() => toggleSelection(domain, "domain")}
               >
                 {domain}
                 {formData.domain.includes(domain) && (
-                  <X className="w-3 h-3 ml-1" />
+                  <X className="w-2.5 h-2.5 sm:w-3 sm:h-3 ml-1" />
                 )}
               </Badge>
             ))}
           </div>
         </div>
 
-        <div className="space-y-4">
-          <Label>
+        <div className="space-y-3 sm:space-y-4">
+          <Label className="text-sm sm:text-base">
             Desired Partner Domain/Specialization{" "}
             <span className="text-red-500">*</span>
           </Label>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
             {domains.map((domain) => (
               <Badge
                 key={domain}
@@ -93,7 +95,7 @@ export function Interests({ formData, onUpdate }: InterestsProps) {
                     ? "default"
                     : "outline"
                 }
-                className={`cursor-pointer ${
+                className={`cursor-pointer text-xs sm:text-sm ${
                   !formData.desiredDomain.includes(domain)
                     ? "hover:bg-green-100"
                     : ""
@@ -102,32 +104,32 @@ export function Interests({ formData, onUpdate }: InterestsProps) {
               >
                 {domain}
                 {formData.desiredDomain.includes(domain) && (
-                  <X className="w-3 h-3 ml-1" />
+                  <X className="w-2.5 h-2.5 sm:w-3 sm:h-3 ml-1" />
                 )}
               </Badge>
             ))}
           </div>
         </div>
 
-        <div className="space-y-4">
-          <Label>
+        <div className="space-y-3 sm:space-y-4">
+          <Label className="text-sm sm:text-base">
             Sector <span className="text-red-500">*</span>
           </Label>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
             {sectors.map((sector) => (
               <Badge
                 key={sector}
                 variant={
                   formData.sector.includes(sector) ? "default" : "outline"
                 }
-                className={`cursor-pointer ${
-                  !formData.sector.includes(sector) ? "hover:bg-green-300" : ""
+                className={`cursor-pointer text-xs sm:text-sm ${
+                  !formData.sector.includes(sector) ? "hover:bg-green-100" : ""
                 }`}
                 onClick={() => toggleSelection(sector, "sector")}
               >
                 {sector}
                 {formData.sector.includes(sector) && (
-                  <X className="w-3 h-3 ml-1" />
+                  <X className="w-2.5 h-2.5 sm:w-3 sm:h-3 ml-1" />
                 )}
               </Badge>
             ))}
