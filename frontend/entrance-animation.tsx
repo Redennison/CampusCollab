@@ -7,14 +7,20 @@ import Login from "@/components/Login"
 
 export default function Component() {
   const [showEntrance, setShowEntrance] = useState(true)
+  const [hasMounted, setHasMounted] = useState(false)
 
   useEffect(() => {
+    setHasMounted(true)
     const timer = setTimeout(() => {
       setShowEntrance(false)
     }, 2500) 
 
     return () => clearTimeout(timer)
   }, [])
+
+  if (!hasMounted) {
+    return null
+  }
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
