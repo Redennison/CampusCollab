@@ -13,7 +13,7 @@ export default function Component() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowEntrance(false)
-    }, 3500)
+    }, 2500) 
 
     return () => clearTimeout(timer)
   }, [])
@@ -56,12 +56,11 @@ export default function Component() {
             {/* Main logo container */}
             <motion.div
               className="relative z-10 flex flex-col items-center"
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               transition={{
-                duration: 1.2,
+                duration: 0.3,
                 ease: "easeOut",
-                delay: 0.3,
               }}
             >
               {/* Logo with floating animation */}
@@ -77,16 +76,35 @@ export default function Component() {
                 }}
               >
                 <motion.div
-                  initial={{ scale: 0}}
-                  animate={{ scale: 1}}
-                  transition={{
-                    duration: 1,
+                  // initial={{
+                  //   rotateY: 90,
+                  //   opacity: 0,
+                  // }}
+                  // animate={{
+                  //   rotateY: 0,
+                  //   opacity: 1,
+                  // }}
+                  // transition={{
+                  //   duration: 0.8,
+                  //   ease: "easeOut",
+                  // }}
+                  initial={{
+                    scale: 1.5,
+                    opacity: 0,
+                    filter: "blur(10px)",
+                  }}
+                    animate={{
+                    scale: 1,
+                    opacity: 1,
+                    filter: "blur(0px)",
+                  }}
+                    transition={{
+                    duration: 0.8,
                     ease: "easeOut",
-                    delay: 0.5,
                   }}
                 >
                   <Image
-                    src="/matchagoose-logo.png"
+                    src="/logo.png"
                     alt="MatchaGoose Logo"
                     width={300}
                     height={300}
@@ -115,15 +133,15 @@ export default function Component() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{
-                  duration: 0.8,
-                  delay: 1.5,
+                  duration: 0.6, 
+                  delay: 0.6,  
                 }}
               >
                 <motion.h1
                   className="text-2xl md:text-3xl font-light text-gray-700 mb-2"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: 2 }}
+                  transition={{ delay: 0.8 }} 
                 >
                   Welcome to
                 </motion.h1>
@@ -131,7 +149,7 @@ export default function Component() {
                   className="text-4xl md:text-5xl font-bold"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: 2.2 }}
+                  transition={{ delay: 1.0 }} 
                 >
                   <span className="text-gray-800">MATCHA</span>
                   <span className="text-green-600">GOOSE</span>
