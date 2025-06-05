@@ -37,7 +37,7 @@ export default function Login({ showEntrance }: { showEntrance: boolean }) {
         return
       }
 
-      router.push('/')
+      router.push('/onboarding')
     } catch (error) {
       setError('Something went wrong')
     }
@@ -63,7 +63,7 @@ export default function Login({ showEntrance }: { showEntrance: boolean }) {
         return
       }
 
-      router.push('/')
+      router.push('/onboarding')
     } catch (error) {
       setError('Something went wrong')
     }
