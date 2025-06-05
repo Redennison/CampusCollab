@@ -55,7 +55,7 @@ def sign_in(request: SignUpOrInRequest):
 
     # Check if the user exists
     user = user_service.get_user_by_email(request.email)
-    hashed_password = user.data.get("password")
+    hashed_password = user.get("password")
     if not hashed_password:
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
