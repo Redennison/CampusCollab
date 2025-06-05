@@ -3,9 +3,7 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import Login from "@/components/Login"
 
 export default function Component() {
   const [showEntrance, setShowEntrance] = useState(true)
@@ -159,102 +157,7 @@ export default function Component() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Main app content (shown after entrance slides up) */}
-      <motion.div
-        className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-50 via-white to-green-100 p-4"
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: showEntrance ? 0 : 1, y: showEntrance ? 50 : 0 }}
-        transition={{ duration: 0.8, delay: showEntrance ? 0 : 0.5 }}
-      >
-        <div className="w-full max-w-md">
-          {/* Small logo at top */}
-          <motion.div
-            className="text-center mb-8"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: showEntrance ? 0 : 1, y: showEntrance ? -20 : 0 }}
-            transition={{ duration: 0.6, delay: showEntrance ? 0 : 0.8 }}
-          >
-            <Image
-              src="/matchagoose-logo.png"
-              alt="MatchaGoose"
-              width={80}
-              height={80}
-              className="w-16 h-auto mx-auto mb-2"
-            />
-            <h1 className="text-2xl font-bold">
-              <span className="text-gray-800">MATCHA</span>
-              <span className="text-green-600">GOOSE</span>
-            </h1>
-          </motion.div>
-
-          {/* Login Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: showEntrance ? 0 : 1, y: showEntrance ? 30 : 0 }}
-            transition={{ duration: 0.6, delay: showEntrance ? 0 : 1 }}
-          >
-            <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-              <CardHeader className="text-center">
-                <CardTitle className="text-2xl font-semibold text-gray-800">Welcome Back</CardTitle>
-                <CardDescription className="text-gray-600">Sign in to your account to continue</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <label htmlFor="email" className="text-sm font-medium text-gray-700">
-                    Email
-                  </label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    className="border-gray-200 focus:border-green-500 focus:ring-green-500"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="password" className="text-sm font-medium text-gray-700">
-                    Password
-                  </label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Enter your password"
-                    className="border-gray-200 focus:border-green-500 focus:ring-green-500"
-                  />
-                </div>
-                <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2">Sign In</Button>
-                <div className="text-center">
-                  <a href="#" className="text-sm text-green-600 hover:text-green-700">
-                    Forgot your password?
-                  </a>
-                </div>
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-gray-200" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-2 text-gray-500">Or continue with</span>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <Button variant="outline" className="border-gray-200 hover:bg-gray-50">
-                    Google
-                  </Button>
-                  <Button variant="outline" className="border-gray-200 hover:bg-gray-50">
-                    GitHub
-                  </Button>
-                </div>
-                <div className="text-center text-sm text-gray-600">
-                  {"Don't have an account? "}
-                  <a href="#" className="text-green-600 hover:text-green-700 font-medium">
-                    Sign up
-                  </a>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
-      </motion.div>
+      <Login showEntrance={showEntrance} />
     </div>
   )
 }
