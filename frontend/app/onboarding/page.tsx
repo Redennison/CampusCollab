@@ -32,7 +32,6 @@ const steps = [
 ];
 
 export default function OnboardingPage() {
-  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
@@ -92,11 +91,11 @@ export default function OnboardingPage() {
         <div className="max-w-3xl mx-auto">
           <div className="mb-4 sm:mb-8">
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-              Welcome to CoFounder
+              Welcome to MatchaGoose
             </h1>
             <p className="text-sm sm:text-base text-gray-600">
               Let&apos;s get to know you better. This will help us match you
-              with the right co-founder.
+              with the right people.
             </p>
           </div>
 
