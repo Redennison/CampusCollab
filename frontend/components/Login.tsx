@@ -6,11 +6,68 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useRouter } from 'next/navigation'
 
 export default function Login({ showEntrance }: { showEntrance: boolean }) {
   const [isLogin, setIsLogin] = useState(true)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const router = useRouter()
 
   const toggleView = () => setIsLogin(!isLogin)
+
+  const handleSignup = async () => {
+    try {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || 'Signup failed')
+        return
+      }
+
+      router.push('/onboarding')
+    } catch (error) {
+      setError('Something went wrong')
+    }
+  }
+
+  const handleLogin = async () => {
+    try {
+      const response = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || 'Login failed')
+        return
+      }
+
+      router.push('/onboarding')
+    } catch (error) {
+      setError('Something went wrong')
+    }
+  }
 
   return (
     <motion.div
@@ -65,6 +122,8 @@ export default function Login({ showEntrance }: { showEntrance: boolean }) {
                 <Input
                   id="email"
                   type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
                   className="border-gray-200 focus:border-green-500 focus:ring-green-500"
                 />
@@ -76,11 +135,16 @@ export default function Login({ showEntrance }: { showEntrance: boolean }) {
                 <Input
                   id="password"
                   type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
                   className="border-gray-200 focus:border-green-500 focus:ring-green-500"
                 />
               </div>
-              <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2">
+              <Button 
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2"
+                onClick={isLogin ? handleLogin : handleSignup}
+              >
                 {isLogin ? "Sign In" : "Sign Up"}
               </Button>
 
@@ -90,6 +154,12 @@ export default function Login({ showEntrance }: { showEntrance: boolean }) {
                   <a href="#" className="text-sm text-green-600 hover:text-green-700">
                     Forgot your password?
                   </a>
+                </div>
+              )}
+
+              {error && (
+                <div className="text-red-500 text-sm text-center">
+                  {error}
                 </div>
               )}
 

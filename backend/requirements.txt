@@ -3,3 +3,5 @@ uvicorn
 passlib[bcrypt] 
 python-jose
 bcrypt==4.0.1 
+dotenv
+supabase
