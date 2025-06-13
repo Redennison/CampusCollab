@@ -1,10 +1,13 @@
+from auth import get_current_user
+from services import jwt_service
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from passlib.context import CryptContext
 from jose import jwt
 from datetime import datetime, timedelta, timezone
-from services import user_service, jwt_service
+from services import user_service
 from supabase_client import supabase
+from fastapi import Depends
 
 # Define the request body model for sign up and sign in
 class SignUpOrInRequest(BaseModel):
@@ -24,11 +27,6 @@ Returns a success message if the email is not taken.
 """
 @app.post("/signup", status_code=201)
 def sign_up(request: SignUpOrInRequest):
-    """
-    Sign up a new user with email and password.
-    Password is hashed before storing.
-    Returns a success message and JWT if the email is not taken.
-    """
     # Check if the email already exists using user_service
     existing_user = user_service.get_user_by_email(request.email)
     if existing_user:
@@ -52,7 +50,6 @@ Returns a JWT if authentication is successful.
 """
 @app.post("/signin", status_code=200)
 def sign_in(request: SignUpOrInRequest):
-
     # Check if the user exists
     user = user_service.get_user_by_email(request.email)
     hashed_password = user.get("password")
@@ -64,5 +61,13 @@ def sign_in(request: SignUpOrInRequest):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
     # Create JWT token
-    token = jwt_service.create_jwt_token(request.email)
+    token = jwt_service.create_jwt_token(user['id'])
     return {"access_token": token, "token_type": "bearer"}
+
+"""
+Test route to verify the get_current_user middleware.
+Returns the current user's id if the token is valid.
+"""
+@app.get("/me", status_code=200)
+def get_me(current_user: dict = Depends(get_current_user)):
+    return {"user_id": current_user["user_id"]}
