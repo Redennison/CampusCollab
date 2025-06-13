@@ -1,6 +1,5 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Github, Linkedin } from "lucide-react";
 import { BsTwitterX } from "react-icons/bs";
 
@@ -15,11 +14,10 @@ interface SocialLinksProps {
 
 export function SocialLinks({ formData, onUpdate }: SocialLinksProps) {
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Social Links</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="w-full space-y-4 sm:space-y-6">
+      <h2 className="text-lg sm:text-xl font-semibold">Social Links</h2>
+
+      <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="linkedin" className="flex items-center gap-2">
             <Linkedin className="w-4 h-4" />
@@ -55,7 +53,7 @@ export function SocialLinks({ formData, onUpdate }: SocialLinksProps) {
             placeholder="https://x.com/yourusername"
           />
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

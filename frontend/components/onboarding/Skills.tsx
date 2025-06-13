@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
@@ -74,11 +73,10 @@ export function Skills({ formData, onUpdate }: SkillsProps) {
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="text-lg sm:text-xl">Skills</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4 sm:space-y-6">
+    <div className="w-full space-y-4 sm:space-y-6">
+      <h2 className="text-lg sm:text-xl font-semibold">Skills</h2>
+
+      <div className="space-y-4 sm:space-y-6">
         <div className="space-y-3 sm:space-y-4">
           <div className="flex items-center justify-between">
             <Label className="text-sm sm:text-base">
@@ -141,7 +139,7 @@ export function Skills({ formData, onUpdate }: SkillsProps) {
             ))}
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

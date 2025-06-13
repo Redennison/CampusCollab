@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { PersonalInfo } from "@/components/onboarding/PersonalInfo";
 import { Interests } from "@/components/onboarding/Interests";
 import { Skills } from "@/components/onboarding/Skills";
@@ -99,18 +98,25 @@ export default function OnboardingPage() {
             </p>
           </div>
 
-          <div className="mb-4 sm:mb-8">
-            <div className="flex justify-between items-center">
+          <div className="mb-8 sm:mb-12">
+            <div className="flex justify-between items-center relative">
+              {/* Background track */}
+              <div className="absolute top-0 left-0 w-full h-2 bg-gray-200" />
+
+              {/* Animated progress bar */}
+              <div
+                className="absolute top-0 left-0 h-2 bg-green-500 transition-all duration-500 ease-in-out"
+                style={{
+                  width: `${((currentStep + 1) / steps.length) * 100}%`,
+                }}
+              />
+
+              {/* Step indicators */}
               {steps.map((step, index) => (
                 <div key={step.id} className="flex-1 relative">
-                  <div
-                    className={`h-2 ${
-                      index <= currentStep ? "bg-green-500" : "bg-gray-200"
-                    }`}
-                  />
                   <div className="absolute -bottom-6 sm:-bottom-8 left-1/2 transform -translate-x-1/2">
                     <span
-                      className={`text-sm font-medium ${
+                      className={`text-sm font-medium transition-colors duration-300 ${
                         currentStep === index
                           ? "text-green-600"
                           : "text-gray-500"
