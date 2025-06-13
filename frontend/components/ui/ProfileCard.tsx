@@ -29,7 +29,12 @@ export default function ProfileCard({ profile, onSwipe }: ProfileCardProps) {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-
+        <Image
+          src={profile.image}
+          alt={profile.name}
+          fill
+          className="object-cover"
+        />
         {/* Info Section */}
         <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-white p-6">
           <div className="flex justify-between items-start mb-4">

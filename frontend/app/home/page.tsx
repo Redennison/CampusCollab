@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import Sidebar from '@/components/Sidebar';
-import ProfileCard from '@/components/ProfileCard';
+import Sidebar from '@/components/ui/Sidebar';
+import ProfileCard from '@/components/ui/ProfileCard';
 
 interface Profile {
   id: string;
@@ -19,11 +19,11 @@ export default function HomePage() {
   const mockProfiles: Profile[] = [
     {
       id: '1',
-      name: 'Sarah Chen',
+      name: 'Gnet',
       sector: 'Healthcare',
       domain: 'Infrastructure',
       bio: 'Full-stack developer with 5 years of experience in healthcare tech. Passionate about building scalable systems that improve patient care.',
-      image: '/ahmed_mohammed_sexy.jpeg',
+      image: '/gnet.jpg',
       skills: ['React.js', 'Node.js', 'AWS', 'Docker', 'TypeScript']
     },
     {
@@ -32,7 +32,7 @@ export default function HomePage() {
       sector: 'FinTech',
       domain: 'Backend',
       bio: 'Backend specialist focused on building secure and scalable financial systems. Expert in distributed systems and microservices architecture.',
-      image: '/images/profile2.jpg',
+      image: '/gnet.jpg',
       skills: ['Java', 'Spring Boot', 'Kubernetes', 'PostgreSQL', 'Redis']
     },
     // Add more mock profiles as needed
