@@ -31,13 +31,14 @@ export default function Login({ showEntrance }: { showEntrance: boolean }) {
       })
 
       const data = await response.json()
+      console.log(data)
 
       if (!response.ok) {
         setError(data.error || 'Signup failed')
         return
       }
 
-      router.push('/onboarding')
+      // router.push('/onboarding')
     } catch (error) {
       setError('Something went wrong')
     }
@@ -57,13 +58,14 @@ export default function Login({ showEntrance }: { showEntrance: boolean }) {
       })
 
       const data = await response.json()
+      console.log(data)
 
       if (!response.ok) {
         setError(data.error || 'Login failed')
         return
       }
 
-      router.push('/onboarding')
+      // router.push('/onboarding')
     } catch (error) {
       setError('Something went wrong')
     }

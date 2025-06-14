@@ -23,6 +23,20 @@ interface FormData {
   x: string;
 }
 
+interface UpdateUserData {
+  first_name?: string;
+  last_name?: string;
+  bio?: string;
+  image_url?: string;
+  user_sector?: string[];
+  user_domain?: string[];
+  desired_domain?: string[];
+  linkedin_url?: string;
+  github_url?: string;
+  twitter_url?: string;
+  has_onboarded?: boolean;
+}
+
 const steps = [
   { id: "personal", title: "Personal Info" },
   { id: "interests", title: "Interests" },
@@ -32,6 +46,7 @@ const steps = [
 
 export default function OnboardingPage() {
   const [currentStep, setCurrentStep] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
     lastName: "",
@@ -51,9 +66,83 @@ export default function OnboardingPage() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleNext = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep((prev) => prev + 1);
+  // Function to send data to Next.js API route (which then calls FastAPI)
+  const updateUserData = async (stepData: UpdateUserData) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/users/update", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(stepData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error || `HTTP error! status: ${response.status}`
+        );
+      }
+
+      const result = await response.json();
+      console.log("Update successful:", result);
+      return result;
+    } catch (error) {
+      console.error("Failed to update user data:", error);
+      // You might want to show an error message to the user here
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleNext = async () => {
+    try {
+      // Prepare data based on current step
+      let stepData: UpdateUserData = {};
+
+      switch (currentStep) {
+        case 0: // Personal Info
+          stepData = {
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            bio: formData.bio,
+            image_url: formData.image_url,
+          };
+          break;
+        case 1: // Interests
+          stepData = {
+            user_sector: formData.sector,
+            user_domain: formData.domain,
+            desired_domain: formData.desiredDomain,
+          };
+          break;
+        case 2: // Skills (you might want to store these in a separate table, but for now we'll skip)
+          // Skills are typically stored separately, so we'll just move to next step
+          stepData = {};
+          break;
+        case 3: // Social Links
+          stepData = {
+            linkedin_url: formData.linkedin,
+            github_url: formData.github,
+            twitter_url: formData.x,
+          };
+          break;
+      }
+
+      // Only make API call if there's data to send
+      if (Object.keys(stepData).length > 0) {
+        await updateUserData(stepData);
+      }
+
+      // Move to next step
+      if (currentStep < steps.length - 1) {
+        setCurrentStep((prev) => prev + 1);
+      }
+    } catch (error) {
+      // Handle error - you might want to show a toast or error message
+      console.error("Error updating user data:", error);
     }
   };
 
@@ -63,7 +152,18 @@ export default function OnboardingPage() {
     }
   };
 
-  const handleSubmit = async () => {};
+  const handleSubmit = async () => {
+    try {
+      // Mark onboarding as complete
+      await updateUserData({ has_onboarded: true });
+
+      // Redirect to main app or show success message
+      console.log("Onboarding completed!");
+      // You might want to redirect here: router.push('/dashboard');
+    } catch (error) {
+      console.error("Error completing onboarding:", error);
+    }
+  };
 
   const isStepValid = () => {
     switch (currentStep) {
@@ -186,7 +286,7 @@ export default function OnboardingPage() {
               <Button
                 variant="outline"
                 onClick={handleBack}
-                disabled={currentStep === 0}
+                disabled={currentStep === 0 || isLoading}
                 className="text-sm sm:text-base"
               >
                 Back
@@ -194,18 +294,18 @@ export default function OnboardingPage() {
               {currentStep === steps.length - 1 ? (
                 <Button
                   onClick={handleSubmit}
-                  disabled={!isStepValid()}
+                  disabled={!isStepValid() || isLoading}
                   className="bg-green-500 hover:bg-green-600 text-sm sm:text-base"
                 >
-                  Complete
+                  {isLoading ? "Completing..." : "Complete"}
                 </Button>
               ) : (
                 <Button
                   onClick={handleNext}
-                  disabled={!isStepValid()}
+                  disabled={!isStepValid() || isLoading}
                   className="bg-green-500 hover:bg-green-600 text-sm sm:text-base"
                 >
-                  Next
+                  {isLoading ? "Saving..." : "Next"}
                 </Button>
               )}
             </div>

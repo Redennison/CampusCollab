@@ -1,8 +1,9 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from passlib.context import CryptContext
 from jose import jwt
 from datetime import datetime, timedelta, timezone
+from typing import Optional, List
 from services import user_service, jwt_service
 from supabase_client import supabase
 
@@ -10,6 +11,21 @@ from supabase_client import supabase
 class SignUpOrInRequest(BaseModel):
     email: str
     password: str
+
+# Define the request body model for user updates during onboarding
+class UserUpdateRequest(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    bio: Optional[str] = None
+    image_url: Optional[str] = None
+    user_domain: Optional[List[str]] = None
+    desired_domain: Optional[List[str]] = None
+    user_sector: Optional[List[str]] = None
+    linkedin_url: Optional[str] = None
+    github_url: Optional[str] = None
+    twitter_url: Optional[str] = None
+    other_url: Optional[str] = None
+    has_onboarded: Optional[bool] = None
 
 # Create a FastAPI app instance
 app = FastAPI()
@@ -66,3 +82,49 @@ def sign_in(request: SignUpOrInRequest):
     # Create JWT token
     token = jwt_service.create_jwt_token(request.email)
     return {"access_token": token, "token_type": "bearer"}
+
+"""
+Update user information during onboarding process.
+Accepts any combination of user fields and updates them in the database.
+Can be called multiple times to progressively update user information.
+"""
+# current_user: dict = Depends(jwt_service.get_current_user)
+@app.patch("/users/update", status_code=200)
+def update_user_info(request: UserUpdateRequest):
+    """
+    Update user information during onboarding.
+    Only updates fields that are provided in the request.
+    """
+    print(request)
+    print("Request made")
+    # try:
+    #     # Get user email from JWT token
+    #     user_email = current_user.get("email")
+    #     if not user_email:
+    #         raise HTTPException(status_code=401, detail="Invalid token")
+        
+    #     # Check if user exists
+    #     existing_user = user_service.get_user_by_email(user_email)
+    #     if not existing_user:
+    #         raise HTTPException(status_code=404, detail="User not found")
+        
+    #     # Build update data from non-None fields
+    #     update_data = {}
+    #     for field, value in request.dict(exclude_unset=True).items():
+    #         if value is not None:
+    #             update_data[field] = value
+        
+    #     # Only proceed if there's data to update
+    #     if not update_data:
+    #         return {"message": "No data provided for update"}
+        
+    #     # Update user information
+    #     updated_user = user_service.update_user_by_email(user_email, update_data)
+        
+    #     return {
+    #         "message": "User information updated successfully",
+    #         "updated_fields": list(update_data.keys())
+    #     }
+        
+    # except Exception as e:
+    #     raise HTTPException(status_code=500, detail=f"Failed to update user: {str(e)}")
