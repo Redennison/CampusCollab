@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Sidebar from '@/components/ui/Sidebar';
+import Sidebar from '@/components/Sidebar';
 import ProfileCard from '@/components/ui/ProfileCard';
 
 interface Profile {
