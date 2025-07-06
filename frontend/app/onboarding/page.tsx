@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { PersonalInfo } from "@/components/onboarding/PersonalInfo";
 import { Interests } from "@/components/onboarding/Interests";
 import { Skills } from "@/components/onboarding/Skills";
 import { SocialLinks } from "@/components/onboarding/SocialLinks";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useEffect } from "react";
 
 interface FormData {
   firstName: string;
@@ -23,6 +25,20 @@ interface FormData {
   x: string;
 }
 
+interface UpdateUserData {
+  first_name?: string;
+  last_name?: string;
+  bio?: string;
+  image_url?: string;
+  user_sector?: string[];
+  user_domain?: string[];
+  desired_domain?: string[];
+  linkedin_url?: string;
+  github_url?: string;
+  twitter_url?: string;
+  has_onboarded?: boolean;
+}
+
 const steps = [
   { id: "personal", title: "Personal Info" },
   { id: "interests", title: "Interests" },
@@ -32,6 +48,7 @@ const steps = [
 
 export default function OnboardingPage() {
   const [currentStep, setCurrentStep] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
     lastName: "",
@@ -47,13 +64,112 @@ export default function OnboardingPage() {
     x: "",
   });
 
+  const router = useRouter();
+
+  // Check for authentication token on component mount
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    console.log("Token found:", token ? "Yes" : "No");
+    console.log("Token value:", token);
+
+    if (!token) {
+      console.log("No token found, redirecting to login");
+      router.push("/");
+    }
+  }, [router]);
+
   const handleUpdate = (field: string, value: string | string[]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleNext = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep((prev) => prev + 1);
+  // Function to send data to Next.js API route (which then calls FastAPI)
+  const updateUserData = async (stepData: UpdateUserData) => {
+    try {
+      setIsLoading(true);
+
+      // Get the JWT token from localStorage
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const response = await fetch("/api/users/update", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(stepData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error || `HTTP error! status: ${response.status}`
+        );
+      }
+
+      const result = await response.json();
+      console.log("Update successful:", result);
+      return result;
+    } catch (error) {
+      console.error("Failed to update user data:", error);
+      // You might want to show an error message to the user here
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleNext = async () => {
+    try {
+      // Prepare data based on current step
+      let stepData: UpdateUserData = {};
+
+      switch (currentStep) {
+        case 0: // Personal Info
+          stepData = {
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            bio: formData.bio,
+            image_url: formData.image_url,
+          };
+          break;
+        case 1: // Interests
+          stepData = {
+            user_sector: formData.sector,
+            user_domain: formData.domain,
+            desired_domain: formData.desiredDomain,
+          };
+          break;
+        case 2: // Skills (you might want to store these in a separate table, but for now we'll skip)
+          // Skills are typically stored separately, so we'll just move to next step
+          stepData = {};
+          break;
+        case 3: // Social Links
+          stepData = {
+            linkedin_url: formData.linkedin,
+            github_url: formData.github,
+            twitter_url: formData.x,
+          };
+          console.log("Social Links data being sent:", stepData);
+          break;
+      }
+
+      console.log(`Step ${currentStep} data:`, stepData);
+
+      // Only make API call if there's data to send
+      if (Object.keys(stepData).length > 0) {
+        await updateUserData(stepData);
+      }
+
+      // Move to next step
+      if (currentStep < steps.length - 1) {
+        setCurrentStep((prev) => prev + 1);
+      }
+    } catch (error) {
+      // Handle error - you might want to show a toast or error message
+      console.error("Error updating user data:", error);
     }
   };
 
@@ -63,7 +179,30 @@ export default function OnboardingPage() {
     }
   };
 
-  const handleSubmit = async () => {};
+  const handleSubmit = async () => {
+    try {
+      // Send social links data one final time to ensure they're saved
+      const socialLinksData = {
+        linkedin_url: formData.linkedin,
+        github_url: formData.github,
+        twitter_url: formData.x,
+      };
+
+      // Only send social links if they have data
+      if (formData.linkedin || formData.github || formData.x) {
+        await updateUserData(socialLinksData);
+      }
+
+      // Mark onboarding as complete
+      await updateUserData({ has_onboarded: true });
+
+      // Redirect to home page after successful onboarding
+      console.log("Onboarding completed! Redirecting to home...");
+      router.push("/home");
+    } catch (error) {
+      console.error("Error completing onboarding:", error);
+    }
+  };
 
   const isStepValid = () => {
     switch (currentStep) {
@@ -186,7 +325,7 @@ export default function OnboardingPage() {
               <Button
                 variant="outline"
                 onClick={handleBack}
-                disabled={currentStep === 0}
+                disabled={currentStep === 0 || isLoading}
                 className="text-sm sm:text-base"
               >
                 Back
@@ -194,18 +333,18 @@ export default function OnboardingPage() {
               {currentStep === steps.length - 1 ? (
                 <Button
                   onClick={handleSubmit}
-                  disabled={!isStepValid()}
+                  disabled={!isStepValid() || isLoading}
                   className="bg-green-500 hover:bg-green-600 text-sm sm:text-base"
                 >
-                  Complete
+                  {isLoading ? "Completing..." : "Complete"}
                 </Button>
               ) : (
                 <Button
                   onClick={handleNext}
-                  disabled={!isStepValid()}
+                  disabled={!isStepValid() || isLoading}
                   className="bg-green-500 hover:bg-green-600 text-sm sm:text-base"
                 >
-                  Next
+                  {isLoading ? "Saving..." : "Next"}
                 </Button>
               )}
             </div>
