@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
-import Login from "@/components/Login"
+import Login from "@/components/ui/Login"
 
 export default function Component() {
   const [showEntrance, setShowEntrance] = useState(true)
