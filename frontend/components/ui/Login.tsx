@@ -1,75 +1,107 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { motion } from "framer-motion"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useRouter } from 'next/navigation'
+import { useState } from "react";
+import { motion } from "framer-motion";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useRouter } from "next/navigation";
 
 export default function Login({ showEntrance }: { showEntrance: boolean }) {
-  const [isLogin, setIsLogin] = useState(true)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const router = useRouter()
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const router = useRouter();
 
-  const toggleView = () => setIsLogin(!isLogin)
+  const toggleView = () => setIsLogin(!isLogin);
 
   const handleSignup = async () => {
     try {
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           email,
           password,
         }),
-      })
+      });
 
-      const data = await response.json()
-      console.log(data)
+      const data = await response.json();
+      console.log("Signup response:", data);
 
       if (!response.ok) {
-        setError(data.error || 'Signup failed')
-        return
+        setError(data.error || "Signup failed");
+        return;
       }
 
-      // router.push('/onboarding')
+      // Store the JWT token in localStorage
+      if (data.access_token) {
+        localStorage.setItem("access_token", data.access_token);
+        console.log("Token stored successfully:", data.access_token);
+
+        // Verify token was stored
+        const storedToken = localStorage.getItem("access_token");
+        console.log("Verified stored token:", storedToken);
+      } else {
+        console.error("No access_token in response:", data);
+      }
+
+      router.push("/onboarding");
     } catch (error) {
-      setError('Something went wrong')
+      console.error("Signup error:", error);
+      setError("Something went wrong");
     }
-  }
+  };
 
   const handleLogin = async () => {
     try {
-      const response = await fetch('/api/auth/signin', {
-        method: 'POST',
+      const response = await fetch("/api/auth/signin", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           email,
           password,
         }),
-      })
+      });
 
-      const data = await response.json()
-      console.log(data)
+      const data = await response.json();
+      console.log("Login response:", data);
 
       if (!response.ok) {
-        setError(data.error || 'Login failed')
-        return
+        setError(data.error || "Login failed");
+        return;
       }
 
-      // router.push('/onboarding')
+      // Store the JWT token in localStorage
+      if (data.access_token) {
+        localStorage.setItem("access_token", data.access_token);
+        console.log("Token stored successfully:", data.access_token);
+
+        // Verify token was stored
+        const storedToken = localStorage.getItem("access_token");
+        console.log("Verified stored token:", storedToken);
+      } else {
+        console.error("No access_token in response:", data);
+      }
+
+      router.push("/onboarding");
     } catch (error) {
-      setError('Something went wrong')
+      console.error("Login error:", error);
+      setError("Something went wrong");
     }
-  }
+  };
 
   return (
     <motion.div
@@ -111,14 +143,17 @@ export default function Login({ showEntrance }: { showEntrance: boolean }) {
                 {isLogin ? "Welcome Back" : "Create Account"}
               </CardTitle>
               <CardDescription className="text-gray-600">
-                {isLogin 
-                  ? "Sign in to your account to continue" 
+                {isLogin
+                  ? "Sign in to your account to continue"
                   : "Sign up to get started with MatchaGoose"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="email"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Email
                 </label>
                 <Input
@@ -131,7 +166,10 @@ export default function Login({ showEntrance }: { showEntrance: boolean }) {
                 />
               </div>
               <div className="space-y-2">
-                <label htmlFor="password" className="text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="password"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Password
                 </label>
                 <Input
@@ -143,7 +181,7 @@ export default function Login({ showEntrance }: { showEntrance: boolean }) {
                   className="border-gray-200 focus:border-green-500 focus:ring-green-500"
                 />
               </div>
-              <Button 
+              <Button
                 className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2"
                 onClick={isLogin ? handleLogin : handleSignup}
               >
@@ -153,16 +191,17 @@ export default function Login({ showEntrance }: { showEntrance: boolean }) {
               {/* Show forgot password only for login */}
               {isLogin && (
                 <div className="text-center">
-                  <a href="#" className="text-sm text-green-600 hover:text-green-700">
+                  <a
+                    href="#"
+                    className="text-sm text-green-600 hover:text-green-700"
+                  >
                     Forgot your password?
                   </a>
                 </div>
               )}
 
               {error && (
-                <div className="text-red-500 text-sm text-center">
-                  {error}
-                </div>
+                <div className="text-red-500 text-sm text-center">{error}</div>
               )}
 
               <div className="relative">
@@ -170,21 +209,31 @@ export default function Login({ showEntrance }: { showEntrance: boolean }) {
                   <span className="w-full border-t border-gray-200" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-gray-500">Or continue with</span>
+                  <span className="bg-white px-2 text-gray-500">
+                    Or continue with
+                  </span>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <Button variant="outline" className="border-gray-200 hover:bg-gray-50">
+                <Button
+                  variant="outline"
+                  className="border-gray-200 hover:bg-gray-50"
+                >
                   Google
                 </Button>
-                <Button variant="outline" className="border-gray-200 hover:bg-gray-50">
+                <Button
+                  variant="outline"
+                  className="border-gray-200 hover:bg-gray-50"
+                >
                   GitHub
                 </Button>
               </div>
               {/* Toggle between login and signup */}
               <div className="text-center text-sm text-gray-600">
-                {isLogin ? "Don't have an account? " : "Already have an account? "}
-                <button 
+                {isLogin
+                  ? "Don't have an account? "
+                  : "Already have an account? "}
+                <button
                   onClick={toggleView}
                   className="text-green-600 hover:text-green-700 font-medium"
                 >
@@ -196,5 +245,5 @@ export default function Login({ showEntrance }: { showEntrance: boolean }) {
         </motion.div>
       </div>
     </motion.div>
-  )
+  );
 }

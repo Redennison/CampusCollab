@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { PersonalInfo } from "@/components/onboarding/PersonalInfo";
 import { Interests } from "@/components/onboarding/Interests";
 import { Skills } from "@/components/onboarding/Skills";
 import { SocialLinks } from "@/components/onboarding/SocialLinks";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useEffect } from "react";
 
 interface FormData {
   firstName: string;
@@ -62,6 +64,20 @@ export default function OnboardingPage() {
     x: "",
   });
 
+  const router = useRouter();
+
+  // Check for authentication token on component mount
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    console.log("Token found:", token ? "Yes" : "No");
+    console.log("Token value:", token);
+
+    if (!token) {
+      console.log("No token found, redirecting to login");
+      router.push("/");
+    }
+  }, [router]);
+
   const handleUpdate = (field: string, value: string | string[]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -70,10 +86,18 @@ export default function OnboardingPage() {
   const updateUserData = async (stepData: UpdateUserData) => {
     try {
       setIsLoading(true);
+
+      // Get the JWT token from localStorage
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
       const response = await fetch("/api/users/update", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(stepData),
       });
