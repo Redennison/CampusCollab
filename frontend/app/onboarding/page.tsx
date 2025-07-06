@@ -152,8 +152,11 @@ export default function OnboardingPage() {
             github_url: formData.github,
             twitter_url: formData.x,
           };
+          console.log("Social Links data being sent:", stepData);
           break;
       }
+
+      console.log(`Step ${currentStep} data:`, stepData);
 
       // Only make API call if there's data to send
       if (Object.keys(stepData).length > 0) {
@@ -178,12 +181,24 @@ export default function OnboardingPage() {
 
   const handleSubmit = async () => {
     try {
+      // Send social links data one final time to ensure they're saved
+      const socialLinksData = {
+        linkedin_url: formData.linkedin,
+        github_url: formData.github,
+        twitter_url: formData.x,
+      };
+
+      // Only send social links if they have data
+      if (formData.linkedin || formData.github || formData.x) {
+        await updateUserData(socialLinksData);
+      }
+
       // Mark onboarding as complete
       await updateUserData({ has_onboarded: true });
 
-      // Redirect to main app or show success message
-      console.log("Onboarding completed!");
-      // You might want to redirect here: router.push('/dashboard');
+      // Redirect to home page after successful onboarding
+      console.log("Onboarding completed! Redirecting to home...");
+      router.push("/home");
     } catch (error) {
       console.error("Error completing onboarding:", error);
     }
