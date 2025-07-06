@@ -33,6 +33,8 @@ interface UpdateUserData {
   user_sector?: string[];
   user_domain?: string[];
   desired_domain?: string[];
+  skills?: string[];
+  desired_skills?: string[];
   linkedin_url?: string;
   github_url?: string;
   twitter_url?: string;
@@ -142,9 +144,12 @@ export default function OnboardingPage() {
             desired_domain: formData.desiredDomain,
           };
           break;
-        case 2: // Skills (you might want to store these in a separate table, but for now we'll skip)
-          // Skills are typically stored separately, so we'll just move to next step
-          stepData = {};
+        case 2: // Skills
+          stepData = {
+            skills: formData.skills,
+            desired_skills: formData.desiredSkills,
+          };
+          console.log("Skills data being sent:", stepData);
           break;
         case 3: // Social Links
           stepData = {
@@ -181,6 +186,17 @@ export default function OnboardingPage() {
 
   const handleSubmit = async () => {
     try {
+      // Send skills data one final time to ensure they're saved
+      const skillsData = {
+        skills: formData.skills,
+        desired_skills: formData.desiredSkills,
+      };
+
+      // Only send skills if they have data
+      if (formData.skills.length > 0 || formData.desiredSkills.length > 0) {
+        await updateUserData(skillsData);
+      }
+
       // Send social links data one final time to ensure they're saved
       const socialLinksData = {
         linkedin_url: formData.linkedin,

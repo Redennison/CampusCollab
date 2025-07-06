@@ -24,6 +24,8 @@ class UserUpdateRequest(BaseModel):
     user_domain: Optional[List[str]] = None
     desired_domain: Optional[List[str]] = None
     user_sector: Optional[List[str]] = None
+    skills: Optional[List[str]] = None
+    desired_skills: Optional[List[str]] = None
     linkedin_url: Optional[str] = None
     github_url: Optional[str] = None
     twitter_url: Optional[str] = None
