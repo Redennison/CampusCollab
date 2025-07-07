@@ -1,18 +1,53 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import ProfileCard from '@/components/ui/ProfileCard';
-import {mockProfiles, Profile} from './mockData';
+import { Profile } from './mockData';
 
 export default function HomePage() {
-  const [currentProfile, setCurrentProfile] = useState<Profile>(mockProfiles[0]);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const currentProfile = profiles[currentIndex];
+
+  useEffect(() => {
+    async function loadProfiles() {
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/people', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Fetch error: ${response.status} ${response.statusText}`);
+        }
+
+        const data: Profile[] = await response.json();
+        setProfiles(data);
+        setCurrentIndex(0);
+      } catch (error) {
+        console.error('Failed to load profiles', error);
+      }
+    }
+
+    loadProfiles();
+  }, []);
 
   const handleSwipe = () => {
-    const currentIndex = mockProfiles.findIndex(p => p.id === currentProfile?.id);
-    const nextIndex = (currentIndex + 1) % mockProfiles.length;
-    setCurrentProfile(mockProfiles[nextIndex]);
+    if (profiles.length === 0) return;
+    setCurrentIndex((idx) => (idx + 1) % profiles.length);
   };
+
+  console.log(currentProfile)
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-green-50 via-white to-green-100">
@@ -20,7 +55,11 @@ export default function HomePage() {
       <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto">
         <div className="max-w-6xl mx-auto">
           <div className="relative pb-24">
-            {currentProfile ? (
+            {profiles.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-600">Loading profiles…</p>
+              </div>
+            ) : currentProfile ? (
               <ProfileCard
                 profile={currentProfile}
                 onLike={handleSwipe}

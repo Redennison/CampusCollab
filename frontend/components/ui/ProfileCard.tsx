@@ -53,35 +53,44 @@ export default function ProfileCard({
 
       <CardContent className="space-y-4">
         {/* Domains and Action Buttons */}
-        {profile.user_domain.length > 0 && (
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h3 className="text-sm font-semibold text-gray-900 mb-2">Domains</h3>
-              <div className="flex flex-wrap gap-1">
-                {profile.user_domain.map((domain, index) => (
-                  <Badge key={index} variant="secondary" className="text-xs">
-                    {domain}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-            <div className="flex gap-2 ml-4">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-10 h-10 rounded-full border-red-200 text-red-600 hover:bg-red-50 bg-transparent p-0"
-                onClick={onPass}
-              >
-                <X className="h-4 w-4" />
-                <span className="sr-only">Pass</span>
-              </Button>
-              <Button size="sm" className="w-10 h-10 rounded-full bg-green-600 hover:bg-green-700 p-0" onClick={onLike}>
-                <Heart className="h-4 w-4" />
-                <span className="sr-only">Like</span>
-              </Button>
-            </div>
+        {/* {profile.user_domain.length > 0 ? ( */}
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            {profile.user_domain.length > 0 && (
+              <>
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                  Domains
+                </h3>
+                <div className="flex flex-wrap gap-1">
+                  {profile.user_domain.map((domain, index) => (
+                    <Badge key={index} variant="secondary" className="text-xs">
+                      {domain}
+                    </Badge>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
-        )}
+          <div className="flex gap-2 ml-4">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-10 h-10 rounded-full border-red-200 text-red-600 hover:bg-red-50 bg-transparent p-0"
+              onClick={onPass}
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Pass</span>
+            </Button>
+            <Button
+              size="sm"
+              className="w-10 h-10 rounded-full bg-green-600 hover:bg-green-700 p-0"
+              onClick={onLike}
+            >
+              <Heart className="h-4 w-4" />
+              <span className="sr-only">Like</span>
+            </Button>
+          </div>
+        </div>
 
         {/* Skills */}
         {profile.skills.length > 0 && (
@@ -105,7 +114,9 @@ export default function ProfileCard({
         {/* Sectors */}
         {profile.user_sector.length > 0 && (
           <div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-2">Sectors</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">
+              Sectors
+            </h3>
             <div className="flex flex-wrap gap-1">
               {profile.user_sector.map((sector, index) => (
                 <Badge key={index} variant="outline" className="text-xs">
@@ -119,7 +130,9 @@ export default function ProfileCard({
         {/* Social Links */}
         {socialLinks.length > 0 && (
           <div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-2">Connect</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">
+              Connect
+            </h3>
             <div className="flex gap-2">
               {socialLinks.map((link, index) => {
                 const Icon = link.icon
