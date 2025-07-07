@@ -1,4 +1,22 @@
 # MatchaGoose
+
+## Currently Supported Features
+### Signup / login page
+Frontend: `Login.tsx`
+Backend: `main.py`, `user_service.py`, `jwt_service.py`
+### Onboarding pages
+Frontend: `/app/onboarding/page.tsx`
+Backend: `main.py`, `user_service.py`, `auth.py`
+### Swiping page
+Frontend: `/app/home/page.tsx`
+Backend: `main.py`, `user_service.py`, `auth.py`
+### Liking
+Frontend: `/app/home/page.tsx`
+Backend: `main.py`, `user_service.py`, `like_service.py`
+### Matching
+Frontend: `/app/home/page.tsx`
+Backend: `main.py`, `user_service.py`, `like_service.py`
+
 ## Setup
 
 ### Environment Variables
