@@ -6,7 +6,7 @@ from passlib.context import CryptContext
 from jose import jwt
 from datetime import datetime, timedelta, timezone
 from typing import Optional, List
-from services import user_service, jwt_service
+from services import user_service, jwt_service, like_service
 from supabase_client import supabase
 from fastapi import Depends, Body
 
@@ -191,10 +191,6 @@ def like_user(
             raise HTTPException(status_code=404, detail="Liker user not found")
         liker_id = liker["id"]
 
-        # likee = user_service.get_user_by_id(likee_id)
-        # if not likee:
-        #     raise HTTPException(status_code=404, detail="Likee user not found")
-
         # Insert the like into the Likes table
         supabase.table("Likes").insert({
             "liker_id": liker_id,
@@ -202,6 +198,19 @@ def like_user(
             "liked_at": datetime.utcnow().isoformat()
         }).execute()
 
-        return {"message": "User liked successfully"}
+        # Boolean to notify client of match
+        # Note that adding to match table is handled via trigger
+        is_match = like_service.is_match(liker_id, likee_id)
+
+        response = {
+            "message": "User liked successfully",
+            "is_match": is_match,
+        }
+
+        if is_match:
+            matched_with = user_service.get_user_by_id(likee_id)
+            response["matched_with"] = matched_with['first_name']
+
+        return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to like user: {str(e)}")
