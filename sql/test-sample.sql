@@ -188,4 +188,29 @@ Q11: INSERT INTO "Likes" (
 
 -- QUERY TEMPLATES (F6)
 -- Determine whether $1 and $2 have liked each other
-TRIGGER HERE
+SELECT (
+    EXISTS (
+        SELECT * 
+        FROM "Likes"
+        WHERE liker_id = $1 AND likee_id = $2
+    ) AND EXISTS (
+        SELECT *
+        FROM "Likes"
+        WHERE liker_id = $2 AND likee_id = $1
+    )
+) AS is_match;
+
+-- NOTE: The Matches table insertion occurs via trigger (found in C2.sql)
+
+-- SAMPLE QUERIES (F6)
+Q12: SELECT (
+    EXISTS (
+        SELECT * 
+        FROM "Likes"
+        WHERE liker_id = '1df7d007-3918-43df-b050-8c99deec7b85' AND likee_id = '2vr1d007-3918-43df-b050-8c14dfcc7b95'
+    ) AND EXISTS (
+        SELECT *
+        FROM "Likes"
+        WHERE liker_id = '2vr1d007-3918-43df-b050-8c14dfcc7b95' AND likee_id = '1df7d007-3918-43df-b050-8c99deec7b85'
+    )
+) AS is_match;
