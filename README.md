@@ -18,7 +18,7 @@ Frontend: `/app/home/page.tsx` \
 Backend: `main.py`, `user_service.py`, `like_service.py`
 
 ## Production Dataset
-Generated using `/sql/generate_sample_data.py`
+Generated using `/sql/generate_production_data.py`
 
 ## Setup
 
