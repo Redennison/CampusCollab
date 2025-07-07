@@ -188,5 +188,4 @@ Q11: INSERT INTO "Likes" (
 
 -- QUERY TEMPLATES (F6)
 -- Determine whether $1 and $2 have liked each other
-
 TRIGGER HERE
