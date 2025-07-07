@@ -1,62 +1,69 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import ProfileCard from '@/components/ui/ProfileCard';
-
-interface Profile {
-  id: string;
-  name: string;
-  sector: string;
-  domain: string;
-  bio: string;
-  image: string;
-  skills: string[];
-}
+import { Profile } from './mockData';
 
 export default function HomePage() {
-  // Mock data - replace with actual API call
-  const mockProfiles: Profile[] = [
-    {
-      id: '1',
-      name: 'Gnet',
-      sector: 'Healthcare',
-      domain: 'Infrastructure',
-      bio: 'Full-stack developer with 5 years of experience in healthcare tech. Passionate about building scalable systems that improve patient care.',
-      image: '/gnet.jpg',
-      skills: ['React.js', 'Node.js', 'AWS', 'Docker', 'TypeScript']
-    },
-    {
-      id: '2',
-      name: 'Michael Rodriguez',
-      sector: 'FinTech',
-      domain: 'Backend',
-      bio: 'Backend specialist focused on building secure and scalable financial systems. Expert in distributed systems and microservices architecture.',
-      image: '/gnet.jpg',
-      skills: ['Java', 'Spring Boot', 'Kubernetes', 'PostgreSQL', 'Redis']
-    },
-    // Add more mock profiles as needed
-  ];
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const currentProfile = profiles[currentIndex];
 
-  const [currentProfile, setCurrentProfile] = useState<Profile>(mockProfiles[0]);
+  useEffect(() => {
+    async function loadProfiles() {
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
 
-  const handleSwipe = (direction: 'left' | 'right') => {
-    const currentIndex = mockProfiles.findIndex(p => p.id === currentProfile?.id);
-    const nextIndex = (currentIndex + 1) % mockProfiles.length;
-    setCurrentProfile(mockProfiles[nextIndex]);
+      try {
+        const response = await fetch('/api/people', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Fetch error: ${response.status} ${response.statusText}`);
+        }
+
+        const data: Profile[] = await response.json();
+        setProfiles(data);
+        setCurrentIndex(0);
+      } catch (error) {
+        console.error('Failed to load profiles', error);
+      }
+    }
+
+    loadProfiles();
+  }, []);
+
+  const handleSwipe = () => {
+    if (profiles.length === 0) return;
+    setCurrentIndex((idx) => (idx + 1) % profiles.length);
   };
+
+  console.log(currentProfile)
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-green-50 via-white to-green-100">
       <Sidebar />
       <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Find Your Match</h1>
           <div className="relative pb-24">
-            {currentProfile ? (
+            {profiles.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-600">Loading profiles…</p>
+              </div>
+            ) : currentProfile ? (
               <ProfileCard
                 profile={currentProfile}
-                onSwipe={handleSwipe}
+                onLike={handleSwipe}
+                onPass={handleSwipe}
               />
             ) : (
               <div className="text-center py-12">

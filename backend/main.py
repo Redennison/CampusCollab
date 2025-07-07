@@ -32,6 +32,20 @@ class UserUpdateRequest(BaseModel):
     other_url: Optional[str] = None
     has_onboarded: Optional[bool] = None
 
+# Define the response model for people discovery
+class PeopleResponse(BaseModel):
+    id: str
+    first_name: str
+    last_name: str
+    bio: Optional[str] = None
+    image_url: Optional[str] = None
+    user_domain: List[str]
+    user_sector: List[str]
+    skills: List[str]
+    linkedin_url: Optional[str] = None
+    github_url: Optional[str] = None
+    twitter_url: Optional[str] = None
+
 # Create a FastAPI app instance
 app = FastAPI()
 
@@ -130,3 +144,31 @@ def update_user_info(request: UserUpdateRequest, current_user: dict = Depends(ge
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to update user: {str(e)}")
+
+"""
+Get all users who have completed onboarding, excluding the current user.
+Returns a list of users with their profile information for discovery.
+"""
+@app.get("/people", response_model=List[PeopleResponse], status_code=200)
+def get_people(current_user: dict = Depends(get_current_user)):
+    """
+    Get all onboarded users except the current user.
+    Returns user profiles for the people discovery feature.
+    """
+    try:
+        # Get user email from JWT token
+        user_email = current_user.get("user_id")
+        if not user_email:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
+        # Get all onboarded users except the current user
+        people = user_service.get_onboarded_users_except_current(user_email)
+        
+        for person in people:
+            for field in ["bio", "image_url", "linkedin_url", "github_url", "twitter_url"]:
+                if person.get(field) is None:
+                    person[field] = ""
+        return people
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch people: {str(e)}")

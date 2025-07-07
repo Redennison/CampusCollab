@@ -30,3 +30,14 @@ def update_user_by_email(email: str, update_data: dict):
         return response.data[0]
     else:
         raise ValueError("Failed to update user")
+
+def get_onboarded_users_except_current(current_user_email: str):
+    """
+    Get all users who have completed onboarding, excluding the current user.
+    Returns only the specified fields for the people discovery feature.
+    """
+    response = supabase.table("User").select(
+        "id, first_name, last_name, bio, image_url, user_domain, user_sector, skills, linkedin_url, github_url, twitter_url"
+    ).eq("has_onboarded", True).neq("email", current_user_email).execute()
+    
+    return response.data if response.data else []
