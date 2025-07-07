@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import ProfileCard from '@/components/ui/ProfileCard';
 import { Profile } from './mockData';
+import { ToastContainer, toast } from 'react-toastify';
 
 export default function HomePage() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -67,19 +68,23 @@ export default function HomePage() {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to like user');
       }
-      
+
+      const data = await response.json()
+      if (data.is_match) {
+        toast.success(`You matched with ${data.matched_with}!`);
+      }
+
       handleSwipe();
     } catch (error) {
       console.error('Failed to like user', error);
     }
   };
 
-  console.log(currentProfile)
-
   return (
     <div className="flex h-screen bg-gradient-to-br from-green-50 via-white to-green-100">
       <Sidebar />
       <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto">
+        <ToastContainer position="bottom-right" />
         <div className="max-w-6xl mx-auto">
           <div className="relative pb-24">
             {profiles.length === 0 ? (
