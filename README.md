@@ -2,7 +2,7 @@
 
 ## Currently Supported Features
 ### Signup / login page
-Frontend: `Login.tsx`
+Frontend: `Login.tsx` \
 Backend: `main.py`, `user_service.py`, `jwt_service.py`
 ### Onboarding pages
 Frontend: `/app/onboarding/page.tsx`
