@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional, List
 from services import user_service, jwt_service
 from supabase_client import supabase
-from fastapi import Depends
+from fastapi import Depends, Body
 
 # Define the request body model for sign up and sign in
 class SignUpOrInRequest(BaseModel):
@@ -172,3 +172,36 @@ def get_people(current_user: dict = Depends(get_current_user)):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch people: {str(e)}")
+
+@app.post("/like", status_code=201)
+def like_user(
+    likee_id: str = Body(..., embed=True),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Like another user. The current user (liker) likes the user with likee_id.
+    """
+    try:
+        # Get current user's email and fetch their user record to get the UUID
+        user_email = current_user.get("user_id")
+        if not user_email:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        liker = user_service.get_user_by_email(user_email)
+        if not liker or not liker.get("id"):
+            raise HTTPException(status_code=404, detail="Liker user not found")
+        liker_id = liker["id"]
+
+        # likee = user_service.get_user_by_id(likee_id)
+        # if not likee:
+        #     raise HTTPException(status_code=404, detail="Likee user not found")
+
+        # Insert the like into the Likes table
+        supabase.table("Likes").insert({
+            "liker_id": liker_id,
+            "likee_id": likee_id,
+            "liked_at": datetime.utcnow().isoformat()
+        }).execute()
+
+        return {"message": "User liked successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to like user: {str(e)}")

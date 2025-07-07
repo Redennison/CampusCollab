@@ -47,6 +47,33 @@ export default function HomePage() {
     setCurrentIndex((idx) => (idx + 1) % profiles.length);
   };
 
+  const handleLike = async () => {
+    if (!currentProfile) return;
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      console.error('No authentication token found');
+      return;
+    }
+    try {
+      const response = await fetch('/api/like', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ likee_id: currentProfile.id }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to like user');
+      }
+      
+      handleSwipe();
+    } catch (error) {
+      console.error('Failed to like user', error);
+    }
+  };
+
   console.log(currentProfile)
 
   return (
@@ -62,7 +89,7 @@ export default function HomePage() {
             ) : currentProfile ? (
               <ProfileCard
                 profile={currentProfile}
-                onLike={handleSwipe}
+                onLike={handleLike}
                 onPass={handleSwipe}
               />
             ) : (
