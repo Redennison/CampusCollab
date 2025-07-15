@@ -92,11 +92,44 @@ export default function Login({ showEntrance }: { showEntrance: boolean }) {
         // Verify token was stored
         const storedToken = localStorage.getItem("access_token");
         console.log("Verified stored token:", storedToken);
+
+        // Check user's onboarding status
+        try {
+          const profileResponse = await fetch("/api/users/me", {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${data.access_token}`,
+            },
+          });
+
+          if (profileResponse.ok) {
+            const profileData = await profileResponse.json();
+            console.log("User profile:", profileData);
+
+            // Redirect based on onboarding status
+            if (profileData.has_onboarded) {
+              console.log("User has completed onboarding, redirecting to home");
+              router.push("/home");
+            } else {
+              console.log(
+                "User has not completed onboarding, redirecting to onboarding"
+              );
+              router.push("/onboarding");
+            }
+          } else {
+            console.error(
+              "Failed to fetch user profile, defaulting to onboarding"
+            );
+            router.push("/onboarding");
+          }
+        } catch (profileError) {
+          console.error("Error fetching user profile:", profileError);
+          router.push("/onboarding");
+        }
       } else {
         console.error("No access_token in response:", data);
       }
-
-      router.push("/onboarding");
     } catch (error) {
       console.error("Login error:", error);
       setError("Something went wrong");
