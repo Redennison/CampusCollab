@@ -54,16 +54,28 @@ def update_user_by_id(id: str, update_data: dict):
     else:
         raise ValueError("Failed to update user")
 
-def get_onboarded_users_except_current(current_user_email: str):
+def get_onboarded_users_except_current(user_id: str):
     """
     Get all users who have completed onboarding, excluding the current user.
     Returns only the specified fields for the people discovery feature.
     """
     response = supabase.table("User").select(
         "id, first_name, last_name, bio, image_url, user_domain, user_sector, skills, linkedin_url, github_url, twitter_url"
-    ).eq("has_onboarded", True).neq("email", current_user_email).execute()
+    ).eq("has_onboarded", True).neq("id", user_id).execute()
     
     return response.data if response.data else []
+
+def get_user_recommendations(user_id: str):
+    """
+    Get the recommendations for a user.
+    """
+    response1 = supabase.table("recommendations").select("*").eq("user_id", user_id).execute()
+    response2 = supabase.table("User").select("*").in_("id", response1.data[0]["recommended_user_ids"]).execute()
+    
+    if response2.data:
+        return response2.data
+    else: #fallback for the users without embeddings and recommendations yet (old users)
+        return get_onboarded_users_except_current(user_id)
 
 def embed_user_and_add_to_recommendations(user: dict):
     """
