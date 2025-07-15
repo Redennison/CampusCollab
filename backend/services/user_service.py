@@ -35,6 +35,24 @@ def update_user_by_email(email: str, update_data: dict):
     else:
         raise ValueError("Failed to update user")
 
+def update_user_by_id(id: str, update_data: dict):
+    """
+    Update user information by email address.
+    Only updates the fields provided in update_data.
+    """
+    # First verify the user exists
+    user = get_user_by_id(id)
+    if not user:
+        raise ValueError(f"User with id {id} not found")
+    
+    # Update the user record
+    response = supabase.table("User").update(update_data).eq("id", id).execute()
+    
+    if response.data:
+        return response.data[0]
+    else:
+        raise ValueError("Failed to update user")
+
 def get_onboarded_users_except_current(current_user_email: str):
     """
     Get all users who have completed onboarding, excluding the current user.
