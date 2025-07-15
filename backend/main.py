@@ -1,6 +1,6 @@
 from auth import get_current_user
 from services import jwt_service
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from pydantic import BaseModel
 from passlib.context import CryptContext
 from jose import jwt
@@ -9,6 +9,8 @@ from typing import Optional, List
 from services import user_service, jwt_service, like_service
 from supabase_client import supabase
 from fastapi import Depends, Body
+import uuid
+import os
 
 # Define the request body model for sign up and sign in
 class SignUpOrInRequest(BaseModel):
@@ -127,6 +129,74 @@ def get_current_user_profile(current_user: dict = Depends(get_current_user)):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch user profile: {str(e)}")
+
+"""
+Upload profile image to Supabase Storage and return public URL.
+Accepts image file and returns the public URL to store in database.
+"""
+@app.post("/upload-image", status_code=200)
+async def upload_image(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Upload image to Supabase Storage and return public URL.
+    """
+    try:
+        # Validate file type
+        if not file.content_type or not file.content_type.startswith('image/'):
+            raise HTTPException(status_code=400, detail="File must be an image")
+        
+        # Read file content
+        content = await file.read()
+        
+        # Validate file size (max 5MB)
+        if len(content) > 5 * 1024 * 1024:  # 5MB limit
+            raise HTTPException(status_code=400, detail="File size must be less than 5MB")
+        
+        # Generate unique filename
+        file_extension = os.path.splitext(file.filename)[1] if file.filename else '.jpg'
+        unique_filename = f"{uuid.uuid4()}{file_extension}"
+        file_path = f"profiles/{unique_filename}"
+        
+        # Upload to Supabase Storage
+        try:
+            result = supabase.storage.from_('profile-images').upload(file_path, content)
+            
+            if hasattr(result, 'error') and result.error:
+                raise HTTPException(status_code=500, detail=f"Failed to upload image: {result.error}")
+        except Exception as upload_error:
+            raise HTTPException(status_code=500, detail=f"Upload failed: {str(upload_error)}")
+        
+        # Get public URL
+        try:
+            public_url_result = supabase.storage.from_('profile-images').get_public_url(file_path)
+            
+            # Handle different possible response formats
+            if isinstance(public_url_result, dict):
+                image_url = public_url_result.get('publicURL') or public_url_result.get('publicUrl')
+            elif hasattr(public_url_result, 'get'):
+                image_url = public_url_result.get('publicURL') or public_url_result.get('publicUrl')
+            else:
+                # Sometimes it might return the URL directly as a string
+                image_url = str(public_url_result)
+                
+            if not image_url:
+                raise HTTPException(status_code=500, detail="Failed to get public URL")
+            
+            return {
+                "message": "Image uploaded successfully",
+                "image_url": image_url,
+                "file_path": file_path
+            }
+            
+        except Exception as url_error:
+            raise HTTPException(status_code=500, detail=f"Failed to get public URL: {str(url_error)}")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to upload image: {str(e)}")
 
 """
 Update user information during onboarding process.
