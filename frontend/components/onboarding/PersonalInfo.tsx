@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Upload, X } from "lucide-react";
 import Image from "next/image";
+import { useState } from "react";
 
 interface PersonalInfoProps {
   formData: {
@@ -16,9 +17,52 @@ interface PersonalInfoProps {
 }
 
 export function PersonalInfo({ formData, onUpdate }: PersonalInfoProps) {
+  const [uploading, setUploading] = useState(false);
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    try {
+      setUploading(true);
+
+      // Get the JWT token from localStorage
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        alert("Please log in to upload images");
+        return;
+      }
+
+      // Create FormData to send file
+      const formData = new FormData();
+      formData.append("file", file);
+
+      // Upload to our backend endpoint
+      const response = await fetch("/api/upload-image", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Upload failed");
+      }
+
+      const result = await response.json();
+
+      if (result.image_url) {
+        // Update the form data with the image URL
+        onUpdate("image_url", result.image_url);
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      alert("Error uploading image. Please try again.");
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -65,10 +109,15 @@ export function PersonalInfo({ formData, onUpdate }: PersonalInfoProps) {
             <Button
               variant="outline"
               onClick={() => document.getElementById("image-upload")?.click()}
+              disabled={uploading}
               className="w-full sm:w-auto gap-2 transition-colors duration-200"
             >
               <Upload className="w-4 h-4" />
-              {formData.image_url ? "Change Image" : "Upload Image"}
+              {uploading
+                ? "Uploading..."
+                : formData.image_url
+                ? "Change Image"
+                : "Upload Image"}
             </Button>
           </div>
         </div>
