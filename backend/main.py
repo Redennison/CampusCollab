@@ -163,6 +163,10 @@ def update_user_info(request: UserUpdateRequest, current_user: dict = Depends(ge
         # Update user information
         updated_user = user_service.update_user_by_email(user_email, update_data)
         
+        if update_data.get("has_onboarded") == True:
+            # Embed the user and add their embedding to the user_vectors table and add the results to the recommendations table.    
+            user_service.embed_user_and_add_to_recommendations(updated_user)
+        
         return {
             "message": "User information updated successfully",
             "updated_fields": list(update_data.keys()),
