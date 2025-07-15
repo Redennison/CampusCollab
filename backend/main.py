@@ -66,12 +66,15 @@ def sign_up(request: SignUpOrInRequest):
     
     # Hash the password before storing
     hashed_password = pwd_context.hash(request.password)
-
     # Store the user with hashed password
-    user_service.insert_user(request.email, hashed_password)
+    data = user_service.insert_user(request.email, hashed_password)
+    print({"data is going to be": data})  
 
+    user_id = data.data[0]['id']
+
+    print({"user_id is": user_id})
     # Create JWT token
-    token = jwt_service.create_jwt_token(request.email)
+    token = jwt_service.create_jwt_token(user_id)
 
     # Return success message with JWT token
     return {"message": "Sign up successful", "access_token": token, "token_type": "bearer"}
@@ -95,8 +98,9 @@ def sign_in(request: SignUpOrInRequest):
     if not pwd_context.verify(request.password, hashed_password):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
+    user_id = user.get("id")
     # Create JWT token
-    token = jwt_service.create_jwt_token(request.email)
+    token = jwt_service.create_jwt_token(user_id)
     return {"access_token": token, "token_type": "bearer"}
 
 """
@@ -111,12 +115,12 @@ def get_current_user_profile(current_user: dict = Depends(get_current_user)):
     """
     try:
         # Get user email from JWT token
-        user_email = current_user.get("user_id")
-        if not user_email:
+        user_id = current_user.get("user_id")
+        if not user_id:
             raise HTTPException(status_code=401, detail="Invalid token")
         
         # Get user data
-        user = user_service.get_user_by_email(user_email)
+        user = user_service.get_user_by_id(user_id)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         
@@ -141,12 +145,12 @@ def update_user_info(request: UserUpdateRequest, current_user: dict = Depends(ge
     """
     try:
         # Get user email from JWT token (the user_id in JWT is actually the email)
-        user_email = current_user.get("user_id")
-        if not user_email:
+        user_id = current_user.get("user_id")
+        if not user_id:
             raise HTTPException(status_code=401, detail="Invalid token")
         
         # Check if user exists
-        existing_user = user_service.get_user_by_email(user_email)
+        existing_user = user_service.get_user_by_id(user_id)
         if not existing_user:
             raise HTTPException(status_code=404, detail="User not found")
         
@@ -161,7 +165,7 @@ def update_user_info(request: UserUpdateRequest, current_user: dict = Depends(ge
             return {"message": "No data provided for update"}
         
         # Update user information
-        updated_user = user_service.update_user_by_email(user_email, update_data)
+        updated_user = user_service.update_user_by_id(user_id, update_data)
         
         return {
             "message": "User information updated successfully",
@@ -186,12 +190,12 @@ def get_people(current_user: dict = Depends(get_current_user)):
     """
     try:
         # Get user email from JWT token
-        user_email = current_user.get("user_id")
-        if not user_email:
+        user_id = current_user.get("user_id")
+        if not user_id:
             raise HTTPException(status_code=401, detail="Invalid token")
         
         # Get all onboarded users except the current user
-        people = user_service.get_onboarded_users_except_current(user_email)
+        people = user_service.get_onboarded_users_except_current(user_id)
         
         for person in people:
             for field in ["bio", "image_url", "linkedin_url", "github_url", "twitter_url"]:
@@ -212,10 +216,10 @@ def like_user(
     """
     try:
         # Get current user's email and fetch their user record to get the UUID
-        user_email = current_user.get("user_id")
-        if not user_email:
+        user_id = current_user.get("user_id")
+        if not user_id:
             raise HTTPException(status_code=401, detail="Invalid token")
-        liker = user_service.get_user_by_email(user_email)
+        liker = user_service.get_user_by_id(user_id)
         if not liker or not liker.get("id"):
             raise HTTPException(status_code=404, detail="Liker user not found")
         liker_id = liker["id"]
