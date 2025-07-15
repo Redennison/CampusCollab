@@ -100,6 +100,35 @@ def sign_in(request: SignUpOrInRequest):
     return {"access_token": token, "token_type": "bearer"}
 
 """
+Get current user's profile information.
+Returns the user's profile data including onboarding status.
+"""
+@app.get("/users/me", status_code=200)
+def get_current_user_profile(current_user: dict = Depends(get_current_user)):
+    """
+    Get current user's profile information.
+    Returns user data including has_onboarded status.
+    """
+    try:
+        # Get user email from JWT token
+        user_email = current_user.get("user_id")
+        if not user_email:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
+        # Get user data
+        user = user_service.get_user_by_email(user_email)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Remove sensitive information
+        user_data = {key: value for key, value in user.items() if key != "password"}
+        
+        return user_data
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch user profile: {str(e)}")
+
+"""
 Update user information during onboarding process.
 Accepts any combination of user fields and updates them in the database.
 Can be called multiple times to progressively update user information.
