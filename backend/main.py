@@ -6,7 +6,7 @@ from passlib.context import CryptContext
 from jose import jwt
 from datetime import datetime, timedelta, timezone
 from typing import Optional, List
-from services import user_service, jwt_service, like_service
+from services import user_service, jwt_service, like_service, match_service
 from supabase_client import supabase
 from fastapi import Depends, Body
 import uuid
@@ -325,37 +325,4 @@ def get_matches(current_user: dict = Depends(get_current_user)):
     if not user_id:
         raise HTTPException(401, "Invalid token")
 
-    matches = user_service.get_matches(user_id)
-
-    other_ids = [
-        m["user2_id"] if m["user1_id"] == user_id else m["user1_id"]
-        for m in matches
-    ]
-
-    if not other_ids:
-        return []
-
-    users_resp = (
-        supabase
-        .table("User")
-        .select(
-            "id, first_name, last_name, bio, image_url, user_domain, user_sector, "
-            "skills, linkedin_url, github_url, twitter_url"
-        )
-        .in_("id", other_ids)
-        .eq("has_onboarded", True)
-        .execute()
-    )
-
-    users_info = users_resp.data or []
-    info_map = {u["id"]: u for u in users_info}
-    print(f'Info map: {info_map}')
-    return [
-        {
-            **m,
-            "other_user": info_map[
-                m["user2_id"] if m["user1_id"] == user_id else m["user1_id"]
-            ],
-        }
-        for m in matches
-    ]
+    return match_service.get_matches(user_id)
