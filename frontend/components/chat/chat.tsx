@@ -20,6 +20,8 @@ export default function DatingApp() {
   const [messages, setMessages] = useState<Msg[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
+  console.log(localStorage.getItem("user_id"))
+
   // 1) Initialize Socket.IO once
   useEffect(() => {
     fetch("/api/socket").finally(() => {
@@ -45,6 +47,7 @@ export default function DatingApp() {
         setMatches(data)
         if (data.length > 0) {
           selectMatch(data[0])
+          console.log("Selected matches:", data)
         }
       } catch (e) {
         console.error("Failed to load matches", e)

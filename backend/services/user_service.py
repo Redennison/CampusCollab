@@ -63,13 +63,3 @@ def get_onboarded_users_except_current(current_user_id: str):
     ).eq("has_onboarded", True).neq("id", current_user_id).execute()
     
     return response.data if response.data else []
-
-def get_matches(current_user_id: str):
-    """
-    Get all matches
-    """
-    response = supabase.table("Matches").select(
-        "match_id, user1_id, user2_id, matched_at"
-    ).or_(f"user1_id.eq.{current_user_id},user2_id.eq.{current_user_id}").execute()
-    
-    return response.data if response.data else []
