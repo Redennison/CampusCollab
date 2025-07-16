@@ -1,6 +1,6 @@
 from auth import get_current_user
 from services import jwt_service
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File, Query
 from pydantic import BaseModel
 from passlib.context import CryptContext
 from jose import jwt
@@ -47,6 +47,11 @@ class PeopleResponse(BaseModel):
     linkedin_url: Optional[str] = None
     github_url: Optional[str] = None
     twitter_url: Optional[str] = None
+
+class MessageResponse(BaseModel):
+    content: str
+    sender_id: str
+    sent_at: datetime
 
 
 # Create a FastAPI app instance
@@ -359,3 +364,44 @@ def get_matches(current_user: dict = Depends(get_current_user)):
         }
         for m in matches
     ]
+
+class MessageCreateRequest(BaseModel):
+    match_id: str
+    sender_id: str
+    content: str
+
+@app.post("/messages", status_code=201)
+async def create_message(msg: MessageCreateRequest):
+    data, err = supabase.table("Messages") \
+        .insert({
+          "match_id": msg.match_id,
+          "sender_id": msg.sender_id,
+          "content": msg.content,
+          "sent_at": datetime.now(timezone.utc).isoformat()
+        }).execute()
+    if err and hasattr(err, "message"):
+        raise HTTPException(500, err.message)
+    elif err:
+        raise HTTPException(500, str(err))
+    return {"status": "ok", "message_id": data[0]["id"]}
+
+@app.get("/messages", status_code=200)
+async def get_messages(matchId: str = Query(...)):
+    response = supabase.table("Messages") \
+        .select("*") \
+        .eq("match_id", matchId) \
+        .order("sent_at", desc=False) \
+        .execute()
+    print("Supabase response:", response)
+    if hasattr(response, "error") and response.error:
+        raise HTTPException(500, str(response.error))
+    
+    transformed = [
+        {
+            "message": m["content"],
+            "from": m["sender_id"],
+            "timestamp": int(datetime.fromisoformat(m["sent_at"].replace("Z", "+00:00")).timestamp() * 1000),
+        }
+        for m in response.data
+    ]
+    return transformed

@@ -47,6 +47,7 @@ export default function Login({ showEntrance }: { showEntrance: boolean }) {
       // Store the JWT token in localStorage
       if (data.access_token) {
         localStorage.setItem("access_token", data.access_token);
+        // localStorage.setItem("user_id", data.user_id || ""); 
         console.log("Token stored successfully:", data.access_token);
 
         // Verify token was stored
@@ -106,6 +107,7 @@ export default function Login({ showEntrance }: { showEntrance: boolean }) {
           if (profileResponse.ok) {
             const profileData = await profileResponse.json();
             console.log("User profile:", profileData);
+            localStorage.setItem("user_id", profileData.id || "");
 
             // Redirect based on onboarding status
             if (profileData.has_onboarded) {
