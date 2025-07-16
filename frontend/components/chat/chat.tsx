@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Avatar } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,6 +11,31 @@ import Image from "next/image"
 export default function DatingApp() {
   const [currentMessage, setCurrentMessage] = useState("")
   const [activeTab, setActiveTab] = useState("Messages")
+  const [matches, setMatches] = useState([])
+
+  useEffect(() => {
+    async function fetchMatches() {
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+      try {
+        const response = await fetch("/api/match", {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await response.json()
+        setMatches(data)
+      } catch (err) {
+        console.error("Failed to fetch matches", err)
+      }
+    }
+    fetchMatches()
+  }, [])
 
   return (
     <div className="flex h-screen bg-white">
@@ -50,110 +75,40 @@ export default function DatingApp() {
         {/* Tabs */}
         <div className="flex border-b">
           <button
-            className={`flex-1 py-3 relative ${activeTab === "Matches" ? "text-green-500 font-medium border-b-2 border-green-500" : "text-gray-600"}`}
+            className="flex-1 py-3 relative text-green-500 font-medium border-b-2 border-green-500"
             onClick={() => setActiveTab("Matches")}
           >
             Matches
-            <span className="bg-green-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center absolute top-3 right-4">
+            {/* <span className="bg-green-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center absolute top-3 right-4">
               15
-            </span>
-          </button>
-          <button
-            className={`flex-1 py-3 relative ${activeTab === "Messages" ? "text-green-500 font-medium border-b-2 border-green-500" : "text-gray-600"}`}
-            onClick={() => setActiveTab("Messages")}
-          >
-            Messages
-            <span className="bg-green-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center absolute top-3 right-4">
-              4
-            </span>
+            </span> */}
           </button>
         </div>
 
         {/* Match list */}
         <div className="flex-1 overflow-y-auto">
-          <div className="border-b p-4 flex items-center hover:bg-gray-50 cursor-pointer bg-gray-50">
-            <Avatar className="h-12 w-12">
-              <Image src="/placeholder.svg" alt="David" width={48} height={48} />
-            </Avatar>
-            <div className="ml-3">
-              <div className="font-medium">David</div>
-              <div className="text-sm text-gray-500 flex items-center">
-                <ChevronLeft size={16} /> Hello <span className="ml-1">😊</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-b p-4 flex items-center hover:bg-gray-50 cursor-pointer">
-            <Avatar className="h-12 w-12">
-              <Image src="/placeholder.svg" alt="Jaryd" width={48} height={48} />
-            </Avatar>
-            <div className="ml-3">
-              <div className="font-medium">Jaryd</div>
-              <div className="text-sm text-gray-500 flex items-center">
-                <ChevronLeft size={16} /> Lucky
-              </div>
-            </div>
-          </div>
-
-          <div className="border-b p-4 flex items-center hover:bg-gray-50 cursor-pointer">
-            <Avatar className="h-12 w-12">
-              <Image src="/placeholder.svg" alt="JR" width={48} height={48} />
-            </Avatar>
-            <div className="ml-3">
-              <div className="font-medium">JR</div>
-              <div className="text-sm text-gray-500">Hi therec</div>
-            </div>
-          </div>
-
-          <div className="border-b p-4 flex items-center hover:bg-gray-50 cursor-pointer">
-            <Avatar className="h-12 w-12">
-              <Image src="/placeholder.svg" alt="Christopher" width={48} height={48} />
-            </Avatar>
-            <div className="ml-3">
-              <div className="font-medium">Christopher</div>
-              <div className="text-sm text-gray-500">Hi</div>
-            </div>
-          </div>
-
-          <div className="border-b p-4 flex items-center hover:bg-gray-50 cursor-pointer">
-            <Avatar className="h-12 w-12">
-              <Image src="/placeholder.svg" alt="Steve" width={48} height={48} />
-            </Avatar>
-            <div className="ml-3">
-              <div className="font-medium">Steve</div>
-              <div className="text-sm text-gray-500">Hi</div>
-            </div>
-          </div>
-
-          <div className="border-b p-4 flex items-center hover:bg-gray-50 cursor-pointer">
-            <Avatar className="h-12 w-12">
-              <Image src="/placeholder.svg" alt="André" width={48} height={48} />
-            </Avatar>
-            <div className="ml-3">
-              <div className="font-medium">André</div>
-              <div className="text-sm text-gray-500">How's your day been?</div>
-            </div>
-          </div>
-
-          <div className="border-b p-4 flex items-center hover:bg-gray-50 cursor-pointer">
-            <Avatar className="h-12 w-12">
-              <Image src="/placeholder.svg" alt="Jake" width={48} height={48} />
-            </Avatar>
-            <div className="ml-3">
-              <div className="font-medium">Jake</div>
-              <div className="text-sm text-gray-500">Hi</div>
-            </div>
-          </div>
-
-          <div className="border-b p-4 flex items-center hover:bg-gray-50 cursor-pointer">
-            <Avatar className="h-12 w-12">
-              <Image src="/placeholder.svg" alt="Vin" width={48} height={48} />
-            </Avatar>
-            <div className="ml-3">
-              <div className="font-medium">Vin</div>
-              <div className="text-sm text-gray-500">How are you doing</div>
-            </div>
-          </div>
+          {matches.length === 0 ? (
+            <div className="p-4 text-gray-500">No matches yet.</div>
+          ) : (
+            matches.map((match: any) => {
+              // Determine the other user's id (assuming current user id is available)
+              const other = match.other_user;
+              // You may want to fetch/display more info about the other user (name, avatar, etc.)
+              return (
+                <div key={match.match_id} className="border-b p-4 flex items-center hover:bg-gray-50 cursor-pointer">
+                  <Avatar className="h-12 w-12">
+                    <Image src={other.image_url || "/placeholder.svg"} alt={`${other.first_name} ${other.last_name}`} width={48} height={48} />
+                  </Avatar>
+                  <div className="ml-3">
+                    <div className="font-medium">{other.first_name} {other.last_name}</div>
+                    <div className="text-sm text-gray-500 flex items-center">
+                      <ChevronLeft size={16} /> Hello <span className="ml-1">😊</span>
+                    </div>
+                  </div>
+                </div>
+              )
+            })
+          )}
         </div>
       </div>
 
