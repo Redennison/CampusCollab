@@ -91,16 +91,13 @@ export default function DatingApp() {
             <div className="p-4 text-gray-500">No matches yet.</div>
           ) : (
             matches.map((match: any) => {
-              // Determine the other user's id (assuming current user id is available)
-              const other = match.other_user;
-              // You may want to fetch/display more info about the other user (name, avatar, etc.)
               return (
                 <div key={match.match_id} className="border-b p-4 flex items-center hover:bg-gray-50 cursor-pointer">
                   <Avatar className="h-12 w-12">
-                    <Image src={other.image_url || "/placeholder.svg"} alt={`${other.first_name} ${other.last_name}`} width={48} height={48} />
+                    <Image src={match.image_url || "/placeholder.svg"} alt={`${match.first_name} ${match.last_name}`} width={48} height={48} />
                   </Avatar>
                   <div className="ml-3">
-                    <div className="font-medium">{other.first_name} {other.last_name}</div>
+                    <div className="font-medium">{match.first_name} {match.last_name}</div>
                     <div className="text-sm text-gray-500 flex items-center">
                       <ChevronLeft size={16} /> Hello <span className="ml-1">😊</span>
                     </div>
