@@ -70,6 +70,13 @@ def get_user_recommendations(user_id: str):
     Get the recommendations for a user.
     """
     response1 = supabase.table("recommendations").select("*").eq("user_id", user_id).execute()
+    
+    # If user's recommendations don't exist
+    if not response1.data:
+        user = get_user_by_id(user_id)
+        embed_user_and_add_to_recommendations(user)
+        response1 = supabase.table("recommendations").select("*").eq("user_id", user_id).execute()
+
     response2 = supabase.table("User").select("*").in_("id", response1.data[0]["recommended_user_ids"]).execute()
     
     if response2.data:

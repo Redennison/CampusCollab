@@ -297,14 +297,10 @@ def get_people(current_user: dict = Depends(get_current_user)):
     Returns user profiles for the people discovery feature.
     """
     try:
-        
-        print(current_user)
         # should be user_id
         user_id = current_user.get("user_id")
         if not user_id:
             raise HTTPException(status_code=401, detail="Invalid token")
-        
-        print(current_user)
         
         # Get recommendations for the current user
         people = user_service.get_user_recommendations(user_id)
