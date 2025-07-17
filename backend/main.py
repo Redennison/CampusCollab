@@ -1,16 +1,22 @@
 from auth import get_current_user
 from services import jwt_service
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File, Query
 from pydantic import BaseModel
 from passlib.context import CryptContext
 from jose import jwt
 from datetime import datetime, timedelta, timezone
 from typing import Optional, List
-from services import user_service, jwt_service, like_service
+from services import user_service, jwt_service, like_service, match_service
 from supabase_client import supabase
 from fastapi import Depends, Body
 import uuid
 import os
+import socketio
+
+sio = socketio.AsyncServer(
+    async_mode='asgi',
+    cors_allowed_origins=['http://localhost:3000']
+)
 
 # Define the request body model for sign up and sign in
 class SignUpOrInRequest(BaseModel):
@@ -48,9 +54,37 @@ class PeopleResponse(BaseModel):
     github_url: Optional[str] = None
     twitter_url: Optional[str] = None
 
+class MessageResponse(BaseModel):
+    content: str
+    sender_id: str
+    sent_at: datetime
+
+
 # Create a FastAPI app instance
 app = FastAPI()
+@sio.event
+async def connect(sid, environ):
+    print("Socket connected:", sid)
 
+@sio.event
+async def joinRoom(sid, room_id):
+    await sio.enter_room(sid, room_id)
+    print(f"Socket {sid} joined room {room_id}")
+
+@sio.event
+async def sendMessage(sid, data):
+    res= supabase.table("Messages").insert({
+        "match_id":  data["roomId"],
+        "sender_id": data["from"],
+        "content":   data["message"],
+        "sent_at":   datetime.now(timezone.utc).isoformat()
+    }).execute()
+    print("Message sent to Supabase:", data)
+    await sio.emit("receiveMessage", data, room=data["roomId"])
+
+@sio.event
+def disconnect(sid):
+    print("Socket disconnected:", sid)
 # Password hashing context using bcrypt
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -325,3 +359,53 @@ def like_user(
         return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to like user: {str(e)}")
+    
+@app.get("/matches", status_code=200)
+def get_matches(current_user: dict = Depends(get_current_user)):
+    user_id = current_user.get("user_id")
+    if not user_id:
+        raise HTTPException(401, "Invalid token")
+
+    return match_service.get_matches(user_id)
+
+class MessageCreateRequest(BaseModel):
+    match_id: str
+    sender_id: str
+    content: str
+
+# @app.post("/messages", status_code=201)
+# async def create_message(msg: MessageCreateRequest):
+#     data, err = supabase.table("Messages") \
+#         .insert({
+#           "match_id": msg.match_id,
+#           "sender_id": msg.sender_id,
+#           "content": msg.content,
+#           "sent_at": datetime.now(timezone.utc).isoformat()
+#         }).execute()
+#     if err and hasattr(err, "message"):
+#         raise HTTPException(500, err.message)
+#     elif err:
+#         raise HTTPException(500, str(err))
+#     return {"status": "ok", "message_id": data[0]["id"]}
+
+@app.get("/messages", status_code=200)
+async def get_messages(matchId: str = Query(...)):
+    response = supabase.table("Messages") \
+        .select("*") \
+        .eq("match_id", matchId) \
+        .order("sent_at", desc=False) \
+        .execute()
+    print("Supabase response:", response)
+    if hasattr(response, "error") and response.error:
+        raise HTTPException(500, str(response.error))
+    
+    transformed = [
+        {
+            "message": m["content"],
+            "from": m["sender_id"],
+            "timestamp": int(datetime.strptime(m["sent_at"], "%Y-%m-%dT%H:%M:%S.%f").timestamp() * 1000),
+        }
+        for m in response.data
+    ]
+    return transformed
+app = socketio.ASGIApp(sio, other_asgi_app=app)
