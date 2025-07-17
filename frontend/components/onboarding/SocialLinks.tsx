@@ -21,7 +21,7 @@ export function SocialLinks({ formData, onUpdate }: SocialLinksProps) {
         <div className="space-y-2">
           <Label htmlFor="linkedin" className="flex items-center gap-2">
             <Linkedin className="w-4 h-4" />
-            LinkedIn
+            LinkedIn <span className="text-red-500">*</span>
           </Label>
           <Input
             id="linkedin"
@@ -33,7 +33,7 @@ export function SocialLinks({ formData, onUpdate }: SocialLinksProps) {
         <div className="space-y-2">
           <Label htmlFor="github" className="flex items-center gap-2">
             <Github className="w-4 h-4" />
-            GitHub
+            GitHub <span className="text-red-500">*</span>
           </Label>
           <Input
             id="github"
