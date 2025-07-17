@@ -11,6 +11,12 @@ from supabase_client import supabase
 from fastapi import Depends, Body
 import uuid
 import os
+import socketio
+
+sio = socketio.AsyncServer(
+    async_mode='asgi',
+    cors_allowed_origins=['http://localhost:3000']
+)
 
 # Define the request body model for sign up and sign in
 class SignUpOrInRequest(BaseModel):
@@ -56,7 +62,29 @@ class MessageResponse(BaseModel):
 
 # Create a FastAPI app instance
 app = FastAPI()
+@sio.event
+async def connect(sid, environ):
+    print("Socket connected:", sid)
 
+@sio.event
+async def joinRoom(sid, room_id):
+    await sio.enter_room(sid, room_id)
+    print(f"Socket {sid} joined room {room_id}")
+
+@sio.event
+async def sendMessage(sid, data):
+    res= supabase.table("Messages").insert({
+        "match_id":  data["roomId"],
+        "sender_id": data["from"],
+        "content":   data["message"],
+        "sent_at":   datetime.now(timezone.utc).isoformat()
+    }).execute()
+    print("Message sent to Supabase:", data)
+    await sio.emit("receiveMessage", data, room=data["roomId"])
+
+@sio.event
+def disconnect(sid):
+    print("Socket disconnected:", sid)
 # Password hashing context using bcrypt
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -337,20 +365,20 @@ class MessageCreateRequest(BaseModel):
     sender_id: str
     content: str
 
-@app.post("/messages", status_code=201)
-async def create_message(msg: MessageCreateRequest):
-    data, err = supabase.table("Messages") \
-        .insert({
-          "match_id": msg.match_id,
-          "sender_id": msg.sender_id,
-          "content": msg.content,
-          "sent_at": datetime.now(timezone.utc).isoformat()
-        }).execute()
-    if err and hasattr(err, "message"):
-        raise HTTPException(500, err.message)
-    elif err:
-        raise HTTPException(500, str(err))
-    return {"status": "ok", "message_id": data[0]["id"]}
+# @app.post("/messages", status_code=201)
+# async def create_message(msg: MessageCreateRequest):
+#     data, err = supabase.table("Messages") \
+#         .insert({
+#           "match_id": msg.match_id,
+#           "sender_id": msg.sender_id,
+#           "content": msg.content,
+#           "sent_at": datetime.now(timezone.utc).isoformat()
+#         }).execute()
+#     if err and hasattr(err, "message"):
+#         raise HTTPException(500, err.message)
+#     elif err:
+#         raise HTTPException(500, str(err))
+#     return {"status": "ok", "message_id": data[0]["id"]}
 
 @app.get("/messages", status_code=200)
 async def get_messages(matchId: str = Query(...)):
@@ -367,8 +395,9 @@ async def get_messages(matchId: str = Query(...)):
         {
             "message": m["content"],
             "from": m["sender_id"],
-            "timestamp": int(datetime.fromisoformat(m["sent_at"].replace("Z", "+00:00")).timestamp() * 1000),
+            "timestamp": int(datetime.strptime(m["sent_at"], "%Y-%m-%dT%H:%M:%S.%f").timestamp() * 1000),
         }
         for m in response.data
     ]
     return transformed
+app = socketio.ASGIApp(sio, other_asgi_app=app)
