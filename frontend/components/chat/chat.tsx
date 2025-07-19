@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import Sidebar from "@/components/Sidebar";
 import { Gift, Send, X, ChevronLeft } from "lucide-react";
 import Image from "next/image";
+import { Linkedin, Github, Twitter } from "lucide-react"
+
 
 type Msg = { message: string; from: string; timestamp: number };
 type Match = {
@@ -29,6 +31,7 @@ export default function DatingApp() {
     socketRef.current = socket;
 
     socket.on("receiveMessage", (msg: Msg) => {
+      console.log("Received message:", msg);
       setMessages((prev) => [...prev, msg]);
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     });
@@ -48,6 +51,7 @@ export default function DatingApp() {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data: Match[] = await res.json();
+        console.log("Loaded matches:", data);
         setMatches(data);
         if (data.length > 0) selectMatch(data[0]);
       } catch (e) {
@@ -77,7 +81,7 @@ export default function DatingApp() {
 
   const send = () => {
     if (!currentMessage.trim() || !selectedMatch) return;
-
+    console.log("Sending message:", currentMessage);
     const payload = {
       roomId: selectedMatch.match_id,
       message: currentMessage,
@@ -144,10 +148,10 @@ export default function DatingApp() {
                     {match.other_user.first_name}{" "}
                     {match.other_user.last_name}
                   </div>
-                  <div className="text-sm text-gray-500 flex items-center">
+                  {/* <div className="text-sm text-gray-500 flex items-center">
                     <ChevronLeft size={16} /> Hello{" "}
                     <span className="ml-1">😊</span>
-                  </div>
+                  </div> */}
                 </div>
               </button>
             ))
@@ -233,13 +237,25 @@ export default function DatingApp() {
           <h2 className="text-2xl font-semibold">
             {other?.first_name || "Select a match"}
           </h2>
+          <div className="mt-1 flex items-center text-gray-500">
+            <Linkedin size={16} className="mr-2" />
+            {other?.linkedin_url}
+          </div>
+          <div className="mt-1 flex items-center text-gray-500">
+            <Github size={16} className="mr-2" />
+            {other?.github_url}
+          </div>
+          <div className="mt-1 flex items-center text-gray-500">
+            <Twitter size={16} className="mr-2" />
+            {other?.twitter_url}
+          </div>
           <div className="border-t mt-6 pt-6 flex justify-between">
-            <Button variant="outline" className="flex-1 mr-2">
+            {/* <Button variant="outline" className="flex-1 mr-2">
               UNMATCH
             </Button>
             <Button variant="outline" className="flex-1">
               REPORT
-            </Button>
+            </Button> */}
           </div>
         </div>
       </div>
