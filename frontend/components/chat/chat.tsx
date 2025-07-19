@@ -9,7 +9,7 @@ import Sidebar from "@/components/Sidebar";
 import { Gift, Send, X, ChevronLeft } from "lucide-react";
 import Image from "next/image";
 import { Linkedin, Github, Twitter } from "lucide-react"
-
+import { useRouter } from "next/navigation";
 
 type Msg = { message: string; from: string; timestamp: number };
 type Match = {
@@ -25,6 +25,8 @@ export default function DatingApp() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket>();
+
+  const router = useRouter();
 
   useEffect(() => {
     const socket = io("http://localhost:8000");
@@ -44,7 +46,10 @@ export default function DatingApp() {
   useEffect(() => {
     (async () => {
       const token = localStorage.getItem("access_token");
-      if (!token) return console.error("No auth token");
+      if (!token) {
+        router.replace('/');
+        return;
+      }
 
       try {
         const res = await fetch("/api/match", {

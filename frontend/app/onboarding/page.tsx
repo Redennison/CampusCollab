@@ -71,12 +71,10 @@ export default function OnboardingPage() {
   // Check for authentication token on component mount
   useEffect(() => {
     const token = localStorage.getItem("access_token");
-    console.log("Token found:", token ? "Yes" : "No");
-    console.log("Token value:", token);
 
     if (!token) {
-      console.log("No token found, redirecting to login");
-      router.push("/");
+      router.replace("/");
+      return;
     }
   }, [router]);
 

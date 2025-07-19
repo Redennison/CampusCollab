@@ -5,17 +5,20 @@ import Sidebar from '@/components/Sidebar';
 import ProfileCard from '@/components/ui/ProfileCard';
 import { Profile } from './mockData';
 import { ToastContainer, toast } from 'react-toastify';
+import { useRouter } from "next/navigation";
 
 export default function HomePage() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const currentProfile = profiles[currentIndex];
 
+  const router = useRouter();
+
   useEffect(() => {
     async function loadProfiles() {
       const token = localStorage.getItem('access_token');
       if (!token) {
-        console.error('No authentication token found');
+        router.replace('/');
         return;
       }
 
@@ -52,7 +55,6 @@ export default function HomePage() {
     if (!currentProfile) return;
     const token = localStorage.getItem('access_token');
     if (!token) {
-      console.error('No authentication token found');
       return;
     }
     try {
