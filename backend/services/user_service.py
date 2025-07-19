@@ -1,44 +1,41 @@
-from supabase_client import supabase
+from db import run_query
 from datetime import datetime
 from sentence_transformers import SentenceTransformer
+from typing import List
+
+model = SentenceTransformer('all-MiniLM-L6-v2')
 
 def get_user_by_email(email: str):
-    response = supabase.table("User").select("*").eq("email", email).limit(1).execute()
-    return response.data[0] if response.data else None
+    query = '''
+        SELECT * FROM "User"
+        WHERE email = %s
+        LIMIT 1
+    '''
+    rows = run_query(query, (email,))
+    return rows[0] if rows else None
 
 def get_user_by_id(id: str):
-    response = supabase.table("User").select("*").eq("id", id).limit(1).execute()
-    return response.data[0] if response.data else None
+    query = '''
+        SELECT * FROM "User"
+        WHERE id = %s
+        LIMIT 1
+    '''
+    rows = run_query(query, (id,))
+    return rows[0] if rows else None
 
 def insert_user(email: str, password: str):
-    return supabase.table("User").insert({
-        "email": email, 
-        "password": password, 
-        "has_onboarded": False, 
-        "last_login": datetime.now().isoformat()
-    }).execute()
+    query = '''
+        INSERT INTO "User" (email, password, has_onboarded, last_login)
+        VALUES (%s, %s, %s, %s)
+        RETURNING *
+    '''
+    params = (email, password, False, datetime.now().isoformat())
+    rows = run_query(query, params)
+    return rows[0] if rows else None
 
-def update_user_by_email(email: str, update_data: dict):
+def update_user_by_id(id: str, update_data: dict) -> dict:
     """
-    Update user information by email address.
-    Only updates the fields provided in update_data.
-    """
-    # First verify the user exists
-    user = get_user_by_email(email)
-    if not user:
-        raise ValueError(f"User with email {email} not found")
-    
-    # Update the user record
-    response = supabase.table("User").update(update_data).eq("email", email).execute()
-    
-    if response.data:
-        return response.data[0]
-    else:
-        raise ValueError("Failed to update user")
-
-def update_user_by_id(id: str, update_data: dict):
-    """
-    Update user information by email address.
+    Update user information by ID.
     Only updates the fields provided in update_data.
     """
     # First verify the user exists
@@ -46,11 +43,24 @@ def update_user_by_id(id: str, update_data: dict):
     if not user:
         raise ValueError(f"User with id {id} not found")
     
-    # Update the user record
-    response = supabase.table("User").update(update_data).eq("id", id).execute()
-    
-    if response.data:
-        return response.data[0]
+    if not update_data:
+        raise ValueError("No data provided to update.")
+
+    # Build dynamic SET clause
+    set_clause = ", ".join(f'{key} = %s' for key in update_data.keys())
+    values = list(update_data.values())
+    values.append(id)  # for the WHERE clause
+
+    query = f'''
+        UPDATE "User"
+        SET {set_clause}
+        WHERE id = %s
+        RETURNING *
+    '''
+
+    rows = run_query(query, tuple(values))
+    if rows:
+        return rows[0]
     else:
         raise ValueError("Failed to update user")
 
@@ -59,30 +69,40 @@ def get_onboarded_users_except_current(user_id: str):
     Get all users who have completed onboarding, excluding the current user.
     Returns only the specified fields for the people discovery feature.
     """
-    response = supabase.table("User").select(
-        "id, first_name, last_name, bio, image_url, user_domain, user_sector, skills, linkedin_url, github_url, twitter_url"
-    ).eq("has_onboarded", True).neq("id", user_id).execute()
-    
-    return response.data if response.data else []
+    query = '''
+        SELECT id, first_name, last_name, bio, image_url, user_domain, user_sector,
+               skills, linkedin_url, github_url, twitter_url
+        FROM "User"
+        WHERE has_onboarded = TRUE AND id != %s
+    '''
+    rows = run_query(query, (user_id,))
+    return rows if rows else []
 
 def get_user_recommendations(user_id: str):
     """
     Get the recommendations for a user.
     """
-    response1 = supabase.table("recommendations").select("*").eq("user_id", user_id).execute()
+    # Try to fetch recommendations
+    query = 'SELECT * FROM "recommendations" WHERE user_id = %s LIMIT 1'
+    rows = run_query(query, (user_id,))
     
-    # If user's recommendations don't exist
-    if not response1.data:
+    # If no recommendations exist, generate them
+    if not rows or not rows[0]["recommended_user_ids"]:
         user = get_user_by_id(user_id)
         embed_user_and_add_to_recommendations(user)
-        response1 = supabase.table("recommendations").select("*").eq("user_id", user_id).execute()
+        rows = run_query(query, (user_id,))
 
-    response2 = supabase.table("User").select("*").in_("id", response1.data[0]["recommended_user_ids"]).execute()
+    recommended_ids = rows[0]["recommended_user_ids"]
     
-    if response2.data:
-        return response2.data
-    else: #fallback for the users without embeddings and recommendations yet (old users)
-        return get_onboarded_users_except_current(user_id)
+    # Fetch the actual recommended users
+    if recommended_ids:
+        placeholders = ', '.join(['%s'] * len(recommended_ids))
+        user_query = f'SELECT * FROM "User" WHERE id IN ({placeholders})'
+        recommended_users = run_query(user_query, tuple(recommended_ids))
+        return recommended_users if recommended_users else get_onboarded_users_except_current(user_id)
+    
+    # No recommendations in list — fallback
+    return get_onboarded_users_except_current(user_id)
 
 def embed_user_and_add_to_recommendations(user: dict):
     """
@@ -91,17 +111,18 @@ def embed_user_and_add_to_recommendations(user: dict):
     embedding = add_user_embedding(user)
     add_to_recommendations(embedding, user["id"])
 
-def add_user_embedding(user: dict):
+def add_user_embedding(user: dict) -> List[float]:
     """
-    Add an embedding to the user's record.
+    Add an embedding to the user's record if not already present.
+    Returns the embedding.
     """
-    
-    #check if user already has an embedding
-    response = supabase.table("user_vectors").select("*").eq("user_id", user["id"]).limit(1).execute()
-    if response.data:
-        return response.data[0]["embedding"]
-    
-    #otherwise, create an embedding and add it to the user_vectors table
+    # Check if user already has an embedding
+    check_query = 'SELECT embedding FROM "user_vectors" WHERE user_id = %s LIMIT 1'
+    rows = run_query(check_query, (user["id"],))
+    if rows:
+        return rows[0]["embedding"]
+
+    # Generate string to embed
     bio = user.get('bio', '')
     user_domain = ', '.join(user.get('user_domain', []))
     user_sector = ', '.join(user.get('user_sector', []))
@@ -113,49 +134,64 @@ def add_user_embedding(user: dict):
         f"Sector: {user_sector}. "
         f"Skills: {skills}."
     )
+
+    # Generate embedding
     embedding = get_text_embedding(str_to_embed)
-    supabase.table("user_vectors").insert({"user_id": user["id"], "embedding": embedding}).execute()
-    
+    print(embedding)
+
+    # Insert embedding into user_vectors table
+    insert_query = '''
+        INSERT INTO user_vectors (user_id, embedding)
+        VALUES (%s, %s)
+    '''
+    run_query(insert_query, (user["id"], embedding))
+
     return embedding
 
-def add_to_recommendations(embedding: list, user_id: str):
+def add_to_recommendations(embedding: List[float], user_id: str):
     """
-    Use a user's embedding to perform a similarity search on the user_vectors table and add the results to the recommendations table.
+    Use a user's embedding to perform a similarity search on the user_vectors table
+    and upsert the results into the recommendations table.
     """
-    #get the ids of the top 10 most similar users based on a vector search with cosine similarity
-    similar_users = get_similar_users_rpc(embedding, user_id)
-    
-    print(f"similar_users: {similar_users}")
-    
-    supabase.table("recommendations").upsert({
-        "user_id": user_id,
-        "recommended_user_ids": similar_users
-    }).execute()
+    similar_users = get_similar_users(embedding, user_id)
 
-def get_text_embedding(text: str, model_name: str = 'all-MiniLM-L6-v2') -> list:
+    # Upsert into recommendations table
+    upsert_query = '''
+        INSERT INTO recommendations (user_id, recommended_user_ids)
+        VALUES (%s, %s)
+        ON CONFLICT (user_id)
+        DO UPDATE SET recommended_user_ids = EXCLUDED.recommended_user_ids
+    '''
+    run_query(upsert_query, (user_id, similar_users))
+
+def get_text_embedding(text: str) -> List[float]:
     """
     Generate an embedding for the given text using a sentence-transformers model.
     Returns the embedding as a list of floats.
     """
-    model = SentenceTransformer(model_name)
     embedding = model.encode(text)
     return embedding.tolist()
 
-def get_similar_users_rpc(embedding: list, user_id: str, top_n: int = 10):
-    # Flatten if nested
+def get_similar_users(embedding: List[float], user_id: str, top_n: int = 10) -> List[str]:
+    """
+    Perform a vector similarity search using SQL and pgvector.
+    Returns a list of user_ids most similar to the input embedding, excluding the given user_id.
+    """
+    # Flatten if needed
     if isinstance(embedding[0], list):
         embedding = embedding[0]
-    embedding_str = "[" + ",".join([str(x) for x in embedding]) + "]"
+
+    query = '''
+        SELECT user_id
+        FROM "user_vectors"
+        WHERE user_id != %s
+        ORDER BY embedding <=> %s::vector
+        LIMIT %s
+    '''
+
     try:
-        response = supabase.rpc(
-            "get_similar_users",
-            {
-                "input_embedding": embedding_str,
-                "current_user_id": user_id,
-                "n": top_n
-            }
-        ).execute()
-        return [row["user_id"] for row in response.data]
+        rows = run_query(query, (user_id, embedding, top_n))
+        return [row["user_id"] for row in rows]
     except Exception as e:
-        print("Exception during Supabase RPC:", e)
+        print("Exception during similarity search:", e)
         return []
