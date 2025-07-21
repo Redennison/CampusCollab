@@ -138,7 +138,6 @@ def sign_up(request: SignUpOrInRequest):
     hashed_password = pwd_context.hash(request.password)
     # Store the user with hashed password
     data = user_service.insert_user(request.email, hashed_password)
-    print({"data is going to be": data})  
 
     user_id = data['id']
 
@@ -342,9 +341,9 @@ def update_user_info(request: UserUpdateRequest, current_user: dict = Depends(ge
         updated_user = existing_user
         if update_data:
             updated_user = user_service.update_user_by_id(user_id, update_data)
-        
+
         # Handle onboarding completion
-        if update_data.get("has_onboarded") == True:
+        if updated_user.get("has_onboarded"):
             # Embed the user and add their embedding to the user_vectors table and add the results to the recommendations table.    
             user_service.embed_user_and_add_to_recommendations(updated_user)
         

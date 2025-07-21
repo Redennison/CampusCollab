@@ -113,15 +113,9 @@ def embed_user_and_add_to_recommendations(user: dict):
 
 def add_user_embedding(user: dict) -> List[float]:
     """
-    Add an embedding to the user's record if not already present.
+    Generate and upsert an embedding for the user.
     Returns the embedding.
     """
-    # Check if user already has an embedding
-    check_query = 'SELECT embedding FROM "user_vectors" WHERE user_id = %s LIMIT 1'
-    rows = run_query(check_query, (user["id"],))
-    if rows:
-        return rows[0]["embedding"]
-
     # Generate string to embed
     bio = user.get('bio', '')
     user_domain = ', '.join(user.get('user_domain', []))
@@ -137,14 +131,15 @@ def add_user_embedding(user: dict) -> List[float]:
 
     # Generate embedding
     embedding = get_text_embedding(str_to_embed)
-    print(embedding)
 
-    # Insert embedding into user_vectors table
-    insert_query = '''
+    # Upsert embedding into user_vectors table
+    upsert_query = '''
         INSERT INTO user_vectors (user_id, embedding)
         VALUES (%s, %s)
+        ON CONFLICT (user_id)
+        DO UPDATE SET embedding = EXCLUDED.embedding
     '''
-    run_query(insert_query, (user["id"], embedding))
+    run_query(upsert_query, (user["id"], embedding))
 
     return embedding
 
