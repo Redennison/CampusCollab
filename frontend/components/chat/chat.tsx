@@ -17,6 +17,10 @@ type Match = {
   other_user: { first_name: string; last_name: string; image_url?: string };
   matched_at: string;
 };
+type User = {
+  image_url?: string;
+};
+
 
 export default function DatingApp() {
   const [currentMessage, setCurrentMessage] = useState("");
@@ -24,9 +28,11 @@ export default function DatingApp() {
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [messages, setMessages] = useState<Msg[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [user, setUser] = useState<User | null>(null);
   const socketRef = useRef<Socket>();
 
   const router = useRouter();
+
 
   useEffect(() => {
     const socket = io("http://localhost:8000");
@@ -46,6 +52,9 @@ export default function DatingApp() {
   useEffect(() => {
     (async () => {
       const token = localStorage.getItem("access_token");
+      const userId = localStorage.getItem("user_id");
+      console.log("userId:", userId);
+      console.log(localStorage);
       if (!token) {
         router.replace('/');
         return;
@@ -59,8 +68,18 @@ export default function DatingApp() {
         console.log("Loaded matches:", data);
         setMatches(data);
         if (data.length > 0) selectMatch(data[0]);
+
+        const userRes = await fetch(`/api/user`, {
+        headers: { Authorization: `Bearer ${token}` },
+        });
+        if (userRes.ok) {
+          const userData: User = await userRes.json();
+          setUser(userData);
+        } else {
+          console.error("Failed to fetch user", await userRes.text());
+        }
       } catch (e) {
-        console.error("Failed to load matches", e);
+        console.error("Failed to load data", e);
       }
     })();
   }, []);
@@ -109,7 +128,7 @@ export default function DatingApp() {
         <div className="bg-gradient-to-r from-green-500 to-white-400 p-4 flex items-center">
           <Avatar className="h-10 w-10 border-2 border-white">
             <Image
-              src="/placeholder.svg"
+              src={user?.image_url || "/placeholder.svg"}
               alt="Profile"
               width={40}
               height={40}

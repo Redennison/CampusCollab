@@ -466,4 +466,21 @@ async def get_messages(matchId: str = Query(...)):
     ]
     return transformed
 
+@app.get("/user")
+def get_user_image(current_user: dict = Depends(get_current_user)):
+    user_id = current_user.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    try:
+        user = user_service.get_user_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        return {"image_url": user.get("image_url", "")}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve image: {str(e)}")
+
+
 app = socketio.ASGIApp(sio, other_asgi_app=app)
