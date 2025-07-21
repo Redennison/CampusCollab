@@ -5,6 +5,7 @@ import io, { Socket } from "socket.io-client";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import Sidebar from "@/components/Sidebar";
 import { Gift, Send, X, ChevronLeft } from "lucide-react";
 import Image from "next/image";
@@ -257,10 +258,13 @@ export default function DatingApp() {
             className="object-cover"
           />
         </div>
-        <div className="p-6">
+        <div className="px-6 pt-3">
           <h2 className="text-2xl font-semibold">
             {other?.first_name || "Select a match"}
           </h2>
+          <div className="pl-1 pt-2 pb-1">
+            <h6 className="text-xs">{other?.bio}</h6>
+          </div>
           <div className="mt-1 flex items-center text-gray-500">
             <Linkedin size={16} className="mr-2" />
             {other?.linkedin_url}
@@ -273,7 +277,7 @@ export default function DatingApp() {
             <Twitter size={16} className="mr-2" />
             {other?.twitter_url}
           </div>
-          <div className="border-t mt-6 pt-6 flex justify-between">
+          <div className="border-t mt-6 pt-1 flex justify-between">
             {/* <Button variant="outline" className="flex-1 mr-2">
               UNMATCH
             </Button>
@@ -281,6 +285,60 @@ export default function DatingApp() {
               REPORT
             </Button> */}
           </div>
+        </div>
+        <div className="px-6">
+          {other?.skills?.length > 0 && (
+            <div className="mt-1">
+              <h3 className="text-lg font-medium mb-2">Skills</h3>
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                {other.skills.map((skill: string) => (
+                  <Badge
+                    key={skill}
+                    variant="outline"
+                    className="text-xs sm:text-sm"
+                  >
+                    {skill}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="px-6 py-3">
+          {other?.user_domain?.length > 0 && (
+            <div className="mt-1">
+              <h3 className="text-lg font-medium mb-2">Domain</h3>
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                {other.user_domain.map((skill: string) => (
+                  <Badge
+                    key={skill}
+                    variant="outline"
+                    className="text-xs sm:text-sm"
+                  >
+                    {skill}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="px-6">
+          {other?.user_sector?.length > 0 && (
+            <div className="mt-1">
+              <h3 className="text-lg font-medium mb-2">Sector</h3>
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                {other.user_sector.map((skill: string) => (
+                  <Badge
+                    key={skill}
+                    variant="outline"
+                    className="text-xs sm:text-sm"
+                  >
+                    {skill}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
