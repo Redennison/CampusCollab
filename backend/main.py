@@ -14,6 +14,35 @@ from uuid import uuid4, UUID
 import os
 import socketio
 
+# Simple URL validation functions
+def validate_social_url(url: str, platform: str) -> bool:
+    """Validate social media URL format"""
+    if not url.strip():
+        return platform == 'twitter'  # Twitter is optional, others required
+    
+    clean_url = url.strip().lower().replace('https://', '').replace('http://', '')
+    
+    if platform == 'linkedin':
+        return (clean_url.startswith('linkedin.com/in/') or 
+                clean_url.startswith('www.linkedin.com/in/')) and len(clean_url.split('/')) >= 3
+    
+    elif platform == 'github':
+        return (clean_url.startswith('github.com/') or 
+                clean_url.startswith('www.github.com/')) and len(clean_url.split('/')) >= 2
+    
+    elif platform == 'twitter':
+        return any(clean_url.startswith(domain + '/') for domain in 
+                  ['x.com', 'www.x.com', 'twitter.com', 'www.twitter.com']) and len(clean_url.split('/')) >= 2
+    
+    return False
+
+def normalize_url(url: str) -> str:
+    """Add https:// if no protocol specified"""
+    if not url.strip():
+        return url
+    url = url.strip()
+    return url if url.startswith(('http://', 'https://')) else f'https://{url}'
+
 sio = socketio.AsyncServer(
     async_mode='asgi',
     cors_allowed_origins=['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002']
@@ -40,6 +69,11 @@ class UserUpdateRequest(BaseModel):
     twitter_url: Optional[str] = None
     other_url: Optional[str] = None
     has_onboarded: Optional[bool] = None
+    # Password update fields
+    password: Optional[str] = None
+    current_password: Optional[str] = None
+    # Email update field
+    email: Optional[str] = None
 
 # Define the response model for people discovery
 class PeopleResponse(BaseModel):
@@ -243,8 +277,8 @@ Can be called multiple times to progressively update user information.
 @app.patch("/users/update", status_code=200)
 def update_user_info(request: UserUpdateRequest, current_user: dict = Depends(get_current_user)):
     """
-    Update user information during onboarding.
-    Only updates fields that are provided in the request.
+    Update user information during onboarding and profile management.
+    Handles password changes, email updates, and regular profile updates.
     """
     try:
         # Get user email from JWT token (the user_id in JWT is actually the email)
@@ -257,27 +291,72 @@ def update_user_info(request: UserUpdateRequest, current_user: dict = Depends(ge
         if not existing_user:
             raise HTTPException(status_code=404, detail="User not found")
         
-        # Build update data from non-None fields
+        # Handle password update
+        if request.password and request.current_password:
+            # Verify current password
+            stored_password = existing_user.get("password")
+            if not stored_password:
+                raise HTTPException(status_code=400, detail="Current password not found")
+            
+            if not pwd_context.verify(request.current_password, stored_password):
+                raise HTTPException(status_code=400, detail="Current password is incorrect")
+            
+            # Hash the new password
+            hashed_new_password = pwd_context.hash(request.password)
+            
+            # Update password in database
+            password_update_data = {"password": hashed_new_password}
+            user_service.update_user_by_id(user_id, password_update_data)
+        
+        elif request.password and not request.current_password:
+            raise HTTPException(status_code=400, detail="Current password is required to change password")
+        
+        # Build update data from non-None fields, excluding password-related fields
         update_data = {}
+        exclude_fields = {"password", "current_password"}
+        
         for field, value in request.dict(exclude_unset=True).items():
-            if value is not None:
+            if value is not None and field not in exclude_fields:
                 update_data[field] = value
         
-        # Only proceed if there's data to update
-        if not update_data:
-            return {"message": "No data provided for update"}
+        # Validate and normalize social media URLs
+        social_fields = {
+            "linkedin_url": "linkedin",
+            "github_url": "github", 
+            "twitter_url": "twitter"
+        }
         
-        # Update user information
-        updated_user = user_service.update_user_by_id(user_id, update_data)
+        for field, platform in social_fields.items():
+            if field in update_data:
+                url = update_data[field]
+                if not validate_social_url(url, platform):
+                    error_messages = {
+                        "linkedin": "Invalid LinkedIn URL. Please use format: https://linkedin.com/in/username",
+                        "github": "Invalid GitHub URL. Please use format: https://github.com/username",
+                        "twitter": "Invalid Twitter/X URL. Please use format: https://x.com/username"
+                    }
+                    raise HTTPException(status_code=400, detail=error_messages[platform])
+                update_data[field] = normalize_url(url)
         
+        # Update other user information if there's data to update
+        updated_user = existing_user
+        if update_data:
+            updated_user = user_service.update_user_by_id(user_id, update_data)
+        
+        # Handle onboarding completion
         if update_data.get("has_onboarded") == True:
             # Embed the user and add their embedding to the user_vectors table and add the results to the recommendations table.    
             user_service.embed_user_and_add_to_recommendations(updated_user)
         
+        # Build response message
+        updated_fields = list(update_data.keys())
+        if request.password and request.current_password:
+            updated_fields.append("password")
+        
         return {
             "message": "User information updated successfully",
-            "updated_fields": list(update_data.keys()),
-            "user": updated_user
+            "updated_fields": updated_fields,
+            "user": {key: value for key, value in updated_user.items() if key != "password"}  # Don't return password
         }
         
     except ValueError as e:
