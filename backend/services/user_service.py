@@ -120,13 +120,17 @@ def add_user_embedding(user: dict) -> List[float]:
     bio = user.get('bio', '')
     user_domain = ', '.join(user.get('user_domain', []))
     user_sector = ', '.join(user.get('user_sector', []))
+    desired_skills = ', '.join(user.get('desired_skills', []))
+    desired_domain = ', '.join(user.get('desired_domain', []))
     skills = ', '.join(user.get('skills', []))
 
     str_to_embed = (
-        f"Bio: {bio}. "
-        f"Domain: {user_domain}. "
-        f"Sector: {user_sector}. "
+        f"Bio: {bio}."
+        f"Domain: {user_domain}."
+        f"Sector: {user_sector}."
         f"Skills: {skills}."
+        f"Desired Skills: {desired_skills}."
+        f"Desired Domain: {desired_domain}."
     )
 
     # Generate embedding
