@@ -16,6 +16,9 @@ Backend: `main.py`, `user_service.py`, `like_service.py`
 ### Matching
 Frontend: `/app/home/page.tsx` \
 Backend: `main.py`, `user_service.py`, `like_service.py`
+### Profile Management
+Frontend: `app/profile/page.tsx`, `components/profile/SecuritySettings.tsx` \
+Backend: `main.py`, `services/user_service.py` \
 
 ## R4 Production Dataset
 In a production environment, MatchaGoose’s database will be seeded with user data recorded through the onboarding page. However, since we don’t have access to actual production data during development, we decided to generate a synthetic Users table with our `/sql/generate_production_data.py` script. It creates a large dataset of mock users and inserts it into our Users table, generating different combinations of names, domains, skills, and project sector preferences. The script automatically varies these attributes such that our test dataset is realistic.
@@ -49,7 +52,6 @@ Read-only key:\
 ## Chat Page
 <img width="2940" height="1446" alt="image" src="https://github.com/user-attachments/assets/aaa57371-4182-4eb4-aef9-e109c419c30b" />
 
-
 ### Backend
 Open a new terminal.\
 `cd backend`\
@@ -57,3 +59,4 @@ Open a new terminal.\
 `source venv/bin/activate`\
 `pip3 install -r requirements.txt`\
 `python -m uvicorn main:app --reload`
+
