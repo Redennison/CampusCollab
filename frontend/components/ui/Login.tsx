@@ -224,7 +224,7 @@ export default function Login({ showEntrance }: { showEntrance: boolean }) {
               </Button>
 
               {/* Show forgot password only for login */}
-              {isLogin && (
+              {/* {isLogin && (
                 <div className="text-center">
                   <a
                     href="#"
@@ -233,13 +233,13 @@ export default function Login({ showEntrance }: { showEntrance: boolean }) {
                     Forgot your password?
                   </a>
                 </div>
-              )}
+              )} */}
 
               {error && (
                 <div className="text-red-500 text-sm text-center">{error}</div>
               )}
 
-              <div className="relative">
+              {/* <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t border-gray-200" />
                 </div>
@@ -262,7 +262,7 @@ export default function Login({ showEntrance }: { showEntrance: boolean }) {
                 >
                   GitHub
                 </Button>
-              </div>
+              </div> */}
               {/* Toggle between login and signup */}
               <div className="text-center text-sm text-gray-600">
                 {isLogin
