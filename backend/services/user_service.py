@@ -85,7 +85,7 @@ def get_user_recommendations(user_id: str):
     # Try to fetch recommendations
     query = 'SELECT * FROM "recommendations" WHERE user_id = %s LIMIT 1'
     rows = run_query(query, (user_id,))
-    
+
     # If no recommendations exist, generate them
     if not rows or not rows[0]["recommended_user_ids"]:
         user = get_user_by_id(user_id)
@@ -94,12 +94,20 @@ def get_user_recommendations(user_id: str):
 
     recommended_ids = rows[0]["recommended_user_ids"]
     
+    query = 'SELECT likee_id FROM "Likes" WHERE liker_id = %s'
+    liked_ids = run_query(query, (user_id,))
+    liked_id_set = {row['likee_id'] for row in liked_ids}
+    recommended_ids = [uid for uid in recommended_ids if str(uid) not in liked_id_set]
+    
     # Fetch the actual recommended users
     if recommended_ids:
         placeholders = ', '.join(['%s'] * len(recommended_ids))
         user_query = f'SELECT * FROM "User" WHERE id IN ({placeholders})'
         recommended_users = run_query(user_query, tuple(recommended_ids))
-        return recommended_users if recommended_users else get_onboarded_users_except_current(user_id)
+        if recommended_users:
+            user_dict = {user['id']: user for user in recommended_users}
+            ordered_users = [user_dict[str(uid)] for uid in recommended_ids if str(uid) in user_dict]
+            return ordered_users or get_onboarded_users_except_current(user_id)
     
     # No recommendations in list — fallback
     return get_onboarded_users_except_current(user_id)
