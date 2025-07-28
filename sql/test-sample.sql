@@ -11,8 +11,7 @@ locate the sample query's identifier on the "test-sample.out" file.
 -- Feature 1: Signup / login page
 
 -- QUERY TEMPLATES (F1)
-SELECT id, email FROM "User" WHERE email = $1 AND password = $2; -- Authenticate credentials
-SELECT id, email FROM "User" WHERE email = $1; -- Check if emails exists
+SELECT * FROM "User" WHERE email = $1; -- Check if emails exists / retrieve password
 -- Insert new user
 INSERT INTO "User" (
     id, email, password, created_at, last_login, has_onboarded
@@ -21,15 +20,13 @@ INSERT INTO "User" (
 );
 
 -- SAMPLE QUERIES (F1)
--- Sign up
-Q1: SELECT id, email FROM "User" WHERE email = 'bob@bob.ca'; 
+-- Signup / login
+Q1: SELECT * FROM "User" WHERE email = 'bob@bob.ca'; 
 Q2: INSERT INTO "User" (
     id, email, password, created_at, last_login, has_onboarded
 ) VALUES (
     gen_random_uuid(), 'bob@bob.ca', 'bob', NOW(), NOW(), FALSE
 );
--- Login
-Q3: SELECT id, email FROM "User" WHERE email = 'bob@bob.ca' AND password = 'bob';
 
 -- Feature 2: Onboarding pages
 

@@ -1,9 +1,8 @@
-Q1: Success. No rows returned
+Q1:
+| id                                   | email                  | first_name | last_name | bio                            | has_onboarded  | user_domain | desired_domain       | user_sector     |
+| ------------------------------------ | ---------------------- | ---------- | --------- | ------------------------------ | -------------- | ------------|----------------------|-----------------|
+| 8bcc97ff-9cc3-4021-8edc-89a36bf6d783 | bob@bob.ca             | Bob        | Bob       | hello my name is Bob Bob       | true           | {}          | {Infra,DevOps}       | {}              |
 Q2: Success. No rows returned
-Q3:
-| id                                   | email      |
-| ------------------------------------ | ---------- |
-| 768ba9e6-790d-4ae2-8577-3dbbe1c67a58 | bob@bob.ca |
 
 Q4: Success. No rows returned
 Q5: Success. No rows returned

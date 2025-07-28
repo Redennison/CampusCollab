@@ -7,15 +7,16 @@ locate the sample query's identifier on the "test-production.out" file.
 */
 
 -- Feature 1: Signup / login page
--- Sign up
-Q1: SELECT id, email FROM "User" WHERE email = 'bob@bob.ca'; 
+-- Signup / login
+Q1:
+    -- Create a dense index on User(email)
+    CREATE INDEX email_idx ON "User"(email);
+    SELECT * FROM "User" WHERE email = 'lucas@gmail.com'; 
 Q2: INSERT INTO "User" (
     id, email, password, created_at, last_login, has_onboarded
 ) VALUES (
-    gen_random_uuid(), 'bob@bob.ca', 'bob', NOW(), NOW(), FALSE
+    gen_random_uuid(), 'lucas@gmail.com', 'Lucas', NOW(), NOW(), FALSE
 );
--- Login
-Q3: SELECT id, email FROM "User" WHERE email = 'bob@bob.ca' AND password = 'bob';
 
 -- Feature 2: Onboarding pages
 -- Onboarding page 1
