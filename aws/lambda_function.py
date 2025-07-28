@@ -16,6 +16,15 @@ def get_similar_users_rpc(embedding: list, user_id: str, top_n: int = 10):
     if isinstance(embedding[0], list):
         embedding = embedding[0]
     try:
+        '''
+            Here is the associated SQL for the get_similar_users function:
+
+            select user_id
+            from user_vectors
+            where user_id != current_user_id
+            order by embedding <=> input_embedding
+            limit n;
+        '''
         response = supabase.rpc(
             "get_similar_users",
             {
@@ -35,6 +44,15 @@ def update_all_recommendations():
     recompute and update the recommended users list.
     """
     # This performs a join between the User and user_vectors table on user.id = user_vectors.user_id
+    '''
+        Here is the associated SQL for the code below:
+
+        SELECT "User".id, "user_vectors".embedding
+        FROM "User"
+        JOIN "user_vectors" ON "User".id = "user_vectors".user_id
+        WHERE "User".has_onboarded = TRUE;
+    '''
+    
     response = (
         supabase
         .table("User")
@@ -52,6 +70,15 @@ def update_all_recommendations():
         if not embedding: continue
 
         similar_users = get_similar_users_rpc(embedding, user_id)
+
+        '''
+            Here is the associated SQL for the code below:
+
+            INSERT INTO "recommendations" (user_id, recommended_user_ids)
+            VALUES ('<user_id>', ARRAY['<id1>', '<id2>', ..., '<idN>'])
+            ON CONFLICT (user_id)
+            DO UPDATE SET recommended_user_ids = EXCLUDED.recommended_user_ids;
+        '''
 
         supabase.table("recommendations").upsert({
             "user_id": user_id,
