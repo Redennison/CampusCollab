@@ -1,11 +1,11 @@
-# MatchaGoose
+# 🧠 MatchaGoose
 
 **A smarter way to meet builders on campus.**  
 MatchaGoose is a full-stack web application that helps university students connect with like-minded peers based on shared skills, interests, and project goals. Whether you're looking for a hackathon partner, startup co-founder, or just someone to collaborate with, MatchaGoose helps you discover and connect with the right people.
 
 ---
 
-## Features
+## 🚀 Features
 
 ### 👤 User Experience
 - **Signup & Login** – Secure account creation and authentication using hashed passwords.
@@ -22,7 +22,7 @@ MatchaGoose is a full-stack web application that helps university students conne
 
 ---
 
-## Tech Stack
+## 🛠️ Tech Stack
 
 ### Frontend
 - **Framework**: [Next.js](https://nextjs.org/)
@@ -34,7 +34,7 @@ MatchaGoose is a full-stack web application that helps university students conne
 - **Auth & Security**: bcrypt, Passlib, python-jose
 - **Realtime Messaging**: python-socketio
 - **Environment Management**: python-dotenv
-- **Database Driver**: psycopg (PostgreSQL client)
+- **Database Driver**: supabase-py (official Supabase client for Python)
 
 ### Machine Learning
 - **Embeddings**: `sentence-transformers` (MiniLM model)
@@ -45,7 +45,7 @@ MatchaGoose is a full-stack web application that helps university students conne
 
 ---
 
-## Setup
+## 🧪 Setup
 
 ### Frontend
 `cd frontend`\
