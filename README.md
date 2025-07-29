@@ -14,11 +14,10 @@ MatchaGoose is a full-stack web application that helps university students conne
 - **Real-Time Chat** – Matched users can chat in real time using sockets.
 - **Profile Management** – Users can update their bio, skills, social links, and account credentials.
 
-### 🤖 Smart Matching
+### 🤖 Smart Recommendations
 - **Vector Embeddings** – User profiles are embedded using a SentenceTransformer model for semantic similarity.
 - **Recommendation Engine** – Similar users are ranked using cosine similarity and stored for quick access.
 - **Scheduled Updates** – An AWS Lambda function periodically updates recommendations in the background.
-- **Automatic Matching** – When two users like each other, they are matched automatically and can begin chatting.
 
 ---
 
