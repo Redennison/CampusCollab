@@ -1,7 +1,0 @@
-Members + Contributions
-
-Wilson - Contributing to the onboarding process
-Jordan - Contributing to the API and Database setup
-Ahmed - Contributing to the login and proposal document
-Evan - Contributing to the middleware and setup of repository
-Bhavya - Contributing to the frontend and proposal document
