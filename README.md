@@ -27,20 +27,18 @@ MatchaGoose is a full-stack web application that helps university students conne
 ### Frontend
 - **Framework**: [Next.js](https://nextjs.org/)
 - **UI**: Tailwind CSS, Framer Motion, Radix UI, MUI, Lucide Icons
-- **Real-Time**: socket.io-client
+- **Real-Time**: WebSockets via `socket.io-client`
 
 ### Backend
-- **Framework**: [FastAPI](https://fastapi.tiangolo.com/)
-- **Auth & Security**: bcrypt, Passlib, python-jose
-- **Realtime Messaging**: python-socketio
-- **Environment Management**: python-dotenv
-- **Database Driver**: supabase-py (official Supabase client for Python)
+- **API Server**: FastAPI for REST and WebSocket endpoints
+- **Auth**: JWT-based authentication with secure password hashing
+- **Database Access**: Supabase client for interacting with PostgreSQL and calling RPCs
 
 ### Machine Learning
 - **Embeddings**: `sentence-transformers` (MiniLM model)
 
 ### Infrastructure
-- **Database**: PostgreSQL (hosted on [Supabase](https://supabase.com/))
+- **Database**: PostgreSQL (managed by [Supabase](https://supabase.com/))
 - **Scheduled Tasks**: AWS Lambda + EventBridge (for recommendation updates)
 
 ---
