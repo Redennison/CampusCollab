@@ -109,7 +109,7 @@ export default function Component() {
                 >
                   <Image
                     src="/logo.png"
-                    alt="MatchaGoose Logo"
+                    alt="CampusCollab Logo"
                     width={300}
                     height={300}
                     className="w-64 h-auto md:w-80"
@@ -155,8 +155,8 @@ export default function Component() {
                   animate={{ opacity: 1 }}
                   transition={{ delay: 1.0 }} 
                 >
-                  <span className="text-gray-800">MATCHA</span>
-                  <span className="text-green-600">GOOSE</span>
+                  <span className="text-gray-800">CAMPUS</span>
+                  <span className="text-green-600">COLLAB</span>
                 </motion.div>
               </motion.div>
             </motion.div>

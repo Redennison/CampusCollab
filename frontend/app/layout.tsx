@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MatchaGoose",
+  title: "CampusCollab",
   description: "Find and build your next project with the right people.",
   icons: {
     icon: "/favicon.ico",

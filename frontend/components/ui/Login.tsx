@@ -154,15 +154,15 @@ export default function Login({ showEntrance }: { showEntrance: boolean }) {
           transition={{ duration: 0.6, delay: showEntrance ? 0 : 0.8 }}
         >
           <Image
-            src="/matchagoose-logo.png"
-            alt="MatchaGoose"
-            width={80}
-            height={80}
+            src="/logo.png"
+            alt="CampusCollab"
+            width={160}
+            height={160}
             className="w-16 h-auto mx-auto mb-2"
           />
           <h1 className="text-2xl font-bold">
-            <span className="text-gray-800">MATCHA</span>
-            <span className="text-green-600">GOOSE</span>
+            <span className="text-gray-800">CAMPUS</span>
+            <span className="text-green-600">COLLAB</span>
           </h1>
         </motion.div>
 
@@ -180,7 +180,7 @@ export default function Login({ showEntrance }: { showEntrance: boolean }) {
               <CardDescription className="text-gray-600">
                 {isLogin
                   ? "Sign in to your account to continue"
-                  : "Sign up to get started with MatchaGoose"}
+                  : "Sign up to get started with CampusCollab"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

@@ -62,7 +62,7 @@ export default function Sidebar() {
         >
           <Image
             src="/logo.png"
-            alt="MatchaGoose Logo"
+            alt="CampusCollab Logo"
             width={40}
             height={40}
             className="mx-auto"
