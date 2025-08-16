@@ -1,7 +1,7 @@
-# 🧠 MatchaGoose
+# 🧠 CampusCollab
 
 **A smarter way to meet builders on campus.**  
-MatchaGoose is a full-stack web application that helps university students connect with like-minded peers based on shared skills, interests, and project goals. Whether you're looking for a hackathon partner, startup co-founder, or just someone to collaborate with, MatchaGoose helps you discover and connect with the right people.
+CampusCollab is a full-stack web application that helps university students connect with like-minded peers based on shared skills, interests, and project goals. Whether you're looking for a hackathon partner, startup co-founder, or just someone to collaborate with, MatchaGoose helps you discover and connect with the right people.
 
 ---
 
