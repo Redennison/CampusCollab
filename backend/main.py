@@ -7,12 +7,12 @@ from jose import jwt
 from datetime import datetime, timedelta, timezone
 from typing import Optional, List
 from services import user_service, jwt_service, like_service, match_service
-from db import run_query
 from supabase_client import supabase
 from fastapi import Depends, Body
-from uuid import uuid4, UUID
+import uuid
 import os
 import socketio
+from dateutil.parser import isoparse
 
 # Simple URL validation functions
 def validate_social_url(url: str, platform: str) -> bool:
@@ -45,7 +45,7 @@ def normalize_url(url: str) -> str:
 
 sio = socketio.AsyncServer(
     async_mode='asgi',
-    cors_allowed_origins=['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002']
+    cors_allowed_origins=['http://localhost:3000']
 )
 
 # Define the request body model for sign up and sign in
@@ -77,7 +77,7 @@ class UserUpdateRequest(BaseModel):
 
 # Define the response model for people discovery
 class PeopleResponse(BaseModel):
-    id: UUID
+    id: str
     first_name: str
     last_name: str
     bio: Optional[str] = None
@@ -102,18 +102,13 @@ async def joinRoom(sid, room_id):
 
 @sio.event
 async def sendMessage(sid, data):
-    query = '''
-        INSERT INTO "Messages" (match_id, sender_id, content, sent_at)
-        VALUES (%s, %s, %s, %s)
-    '''
-    params = (
-        data["roomId"],
-        data["from"],
-        data["message"],
-        datetime.now(timezone.utc).isoformat()
-    )
-
-    run_query(query, params)
+    res= supabase.table("Messages").insert({
+        "match_id":  data["roomId"],
+        "sender_id": data["from"],
+        "content":   data["message"],
+        "sent_at":   datetime.now(timezone.utc).isoformat()
+    }).execute()
+    print("Message sent to Supabase:", data)
     await sio.emit("receiveMessage", data, room=data["roomId"])
 
 @sio.event
@@ -139,7 +134,7 @@ def sign_up(request: SignUpOrInRequest):
     # Store the user with hashed password
     data = user_service.insert_user(request.email, hashed_password)
 
-    user_id = data['id']
+    user_id = data.data[0]['id']
 
     # Create JWT token
     token = jwt_service.create_jwt_token(user_id)
@@ -226,7 +221,7 @@ async def upload_image(
         
         # Generate unique filename
         file_extension = os.path.splitext(file.filename)[1] if file.filename else '.jpg'
-        unique_filename = f"{uuid4()}{file_extension}"
+        unique_filename = f"{uuid.uuid4()}{file_extension}"
         file_path = f"profiles/{unique_filename}"
         
         # Upload to Supabase Storage
@@ -408,17 +403,11 @@ def like_user(
             raise HTTPException(status_code=404, detail="Liker user not found")
         liker_id = liker["id"]
 
-        query = '''
-                INSERT INTO "Likes" (liker_id, likee_id, liked_at)
-                VALUES (%s, %s, %s)
-            '''
-        params = (
-            liker_id,
-            likee_id,
-            datetime.utcnow().isoformat()
-        )
-
-        run_query(query, params)
+        supabase.table("Likes").insert({
+            "liker_id": liker_id,
+            "likee_id": likee_id,
+            "liked_at": datetime.utcnow().isoformat()
+        }).execute()
 
         # Boolean to notify client of match
         # Note that adding to match table is handled via trigger
@@ -449,20 +438,22 @@ async def get_messages(matchId: str = Query(...)):
     if not matchId:
         return []
 
-    query = '''
-        SELECT * FROM "Messages"
-        WHERE match_id = %s
-        ORDER BY sent_at ASC
-    '''
-    rows = run_query(query, (matchId,))
+    response = supabase.table("Messages") \
+        .select("*") \
+        .eq("match_id", matchId) \
+        .order("sent_at", desc=False) \
+        .execute()
+
+    if hasattr(response, "error") and response.error:
+        raise HTTPException(500, str(response.error))
     
     transformed = [
         {
             "message": row["content"],
             "from": row["sender_id"],
-            "timestamp": int(row["sent_at"].timestamp() * 1000),
+            "timestamp": int(isoparse(row["sent_at"]).timestamp() * 1000),
         }
-        for row in rows
+        for row in response.data
     ]
     return transformed
 
