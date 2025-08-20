@@ -1,4 +1,4 @@
-from auth import get_current_user
+from auth import get_current_user, decode_jwt_user_id
 from services import jwt_service
 from fastapi import FastAPI, HTTPException, UploadFile, File, Query
 from pydantic import BaseModel
@@ -13,6 +13,7 @@ import uuid
 import os
 import socketio
 from dateutil.parser import isoparse
+from limiter import get_redis, TokenBucket
 
 # Simple URL validation functions
 def validate_social_url(url: str, platform: str) -> bool:
@@ -47,6 +48,8 @@ sio = socketio.AsyncServer(
     async_mode='asgi',
     cors_allowed_origins=['http://localhost:3000']
 )
+
+chat_bucket = TokenBucket(get_redis(), capacity=10, refill_per_sec=0.5)
 
 # Define the request body model for sign up and sign in
 class SignUpOrInRequest(BaseModel):
@@ -91,6 +94,7 @@ class PeopleResponse(BaseModel):
 
 # Create a FastAPI app instance
 app = FastAPI()
+
 @sio.event
 async def connect(sid, environ):
     print("Socket connected:", sid)
@@ -102,18 +106,32 @@ async def joinRoom(sid, room_id):
 
 @sio.event
 async def sendMessage(sid, data):
+    sender = data["from"]
+    room_id = data["roomId"]
+    if not sender or not room_id:
+        return
+
+    scope = "chat-send"
+    identity = f"user:{sender}"
+
+    allowed, retry_after, _ = await chat_bucket.allow(scope, identity)
+    if not allowed:
+        await sio.emit("rate_limited", {"retryAfter": retry_after}, room=sid)
+        return
+
     res= supabase.table("Messages").insert({
         "match_id":  data["roomId"],
         "sender_id": data["from"],
         "content":   data["message"],
         "sent_at":   datetime.now(timezone.utc).isoformat()
     }).execute()
-    print("Message sent to Supabase:", data)
+
     await sio.emit("receiveMessage", data, room=data["roomId"])
 
 @sio.event
 def disconnect(sid):
     print("Socket disconnected:", sid)
+
 # Password hashing context using bcrypt
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

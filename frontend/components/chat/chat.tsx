@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import Sidebar from "@/components/Sidebar";
-import { Gift, Send, X, ChevronLeft } from "lucide-react";
+import { Gift, Send, X } from "lucide-react";
 import Image from "next/image";
-import { Linkedin, Github, Twitter } from "lucide-react"
+import { Linkedin, Github, Twitter } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 type Msg = { message: string; from: string; timestamp: number };
@@ -22,8 +22,7 @@ type User = {
   image_url?: string;
 };
 
-
-export default function DatingApp() {
+export default function MatchChat() {
   const [currentMessage, setCurrentMessage] = useState("");
   const [matches, setMatches] = useState<Match[]>([]);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
@@ -32,23 +31,49 @@ export default function DatingApp() {
   const [user, setUser] = useState<User | null>(null);
   const socketRef = useRef<Socket>();
 
-  const router = useRouter();
+  // Rate limit UI state
+  const [rateLimitedUntil, setRateLimitedUntil] = useState<number | null>(null);
+  const [now, setNow] = useState<number>(Date.now());
+  const secondsLeft = rateLimitedUntil
+    ? Math.max(0, Math.ceil((rateLimitedUntil - now) / 1000))
+    : 0;
+  const isRateLimited = !!rateLimitedUntil && secondsLeft > 0;
 
+  const router = useRouter();
 
   useEffect(() => {
     const socket = io("http://localhost:8000");
     socketRef.current = socket;
 
     socket.on("receiveMessage", (msg: Msg) => {
-      console.log("Received message:", msg);
       setMessages((prev) => [...prev, msg]);
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     });
 
+    // listen for rate limit events from server
+    socket.on("rate_limited", ({ retryAfter }: { retryAfter: number }) => {
+      const until = Date.now() + Math.ceil(retryAfter * 1000);
+      setRateLimitedUntil(until);
+    });
+
     return () => {
+      socket.off("receiveMessage");
+      socket.off("rate_limited");
       socket.disconnect();
     };
   }, []);
+
+  // Tick for countdown
+  useEffect(() => {
+    if (!rateLimitedUntil) return;
+    const id = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(id);
+  }, [rateLimitedUntil]);
+
+  // Clear when finished
+  useEffect(() => {
+    if (rateLimitedUntil && secondsLeft <= 0) setRateLimitedUntil(null);
+  }, [secondsLeft, rateLimitedUntil]);
 
   useEffect(() => {
     (async () => {
@@ -57,7 +82,7 @@ export default function DatingApp() {
       console.log("userId:", userId);
       console.log(localStorage);
       if (!token) {
-        router.replace('/');
+        router.replace("/");
         return;
       }
 
@@ -66,12 +91,11 @@ export default function DatingApp() {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data: Match[] = await res.json();
-        console.log("Loaded matches:", data);
         setMatches(data);
         if (data.length > 0) selectMatch(data[0]);
 
         const userRes = await fetch(`/api/user`, {
-        headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${token}` },
         });
         if (userRes.ok) {
           const userData: User = await userRes.json();
@@ -105,8 +129,9 @@ export default function DatingApp() {
   }
 
   const send = () => {
+    if (isRateLimited) return; // block sends during cooldown
     if (!currentMessage.trim() || !selectedMatch) return;
-    console.log("Sending message:", currentMessage);
+
     const payload = {
       roomId: selectedMatch.match_id,
       message: currentMessage,
@@ -170,13 +195,8 @@ export default function DatingApp() {
                 </Avatar>
                 <div className="ml-3">
                   <div className="font-medium">
-                    {match.other_user.first_name}{" "}
-                    {match.other_user.last_name}
+                    {match.other_user.first_name} {match.other_user.last_name}
                   </div>
-                  {/* <div className="text-sm text-gray-500 flex items-center">
-                    <ChevronLeft size={16} /> Hello{" "}
-                    <span className="ml-1">😊</span>
-                  </div> */}
                 </div>
               </button>
             ))
@@ -236,15 +256,22 @@ export default function DatingApp() {
             <Gift size={20} />
           </Button>
           <Input
-            placeholder="Type a message"
+            placeholder={
+              isRateLimited ? `Rate limited… ${secondsLeft}s` : "Type a message"
+            }
             value={currentMessage}
             onChange={(e) => setCurrentMessage(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && send()}
             className="flex-1 rounded-full border-gray-300"
           />
-          <Button onClick={send} size="sm" className="ml-2">
-            <Send className="h-4 w-4 mr-1" /> SEND
+          <Button onClick={send} size="sm" className="ml-2" disabled={isRateLimited}>
+            <Send className="h-4 w-4 mr-1" /> {isRateLimited ? `${secondsLeft}s` : "SEND"}
           </Button>
+          {isRateLimited && (
+            <div className="ml-3 text-sm text-red-600">
+              You’re sending messages too fast. Try again in {secondsLeft}s.
+            </div>
+          )}
         </div>
       </div>
 
@@ -277,14 +304,7 @@ export default function DatingApp() {
             <Twitter size={16} className="mr-2" />
             {other?.twitter_url}
           </div>
-          <div className="border-t mt-6 pt-1 flex justify-between">
-            {/* <Button variant="outline" className="flex-1 mr-2">
-              UNMATCH
-            </Button>
-            <Button variant="outline" className="flex-1">
-              REPORT
-            </Button> */}
-          </div>
+          <div className="border-t mt-6 pt-1 flex justify-between"></div>
         </div>
         <div className="px-6">
           {other?.skills?.length > 0 && (
@@ -292,11 +312,7 @@ export default function DatingApp() {
               <h3 className="text-lg font-medium mb-2">Skills</h3>
               <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {other.skills.map((skill: string) => (
-                  <Badge
-                    key={skill}
-                    variant="outline"
-                    className="text-xs sm:text-sm"
-                  >
+                  <Badge key={skill} variant="outline" className="text-xs sm:text-sm">
                     {skill}
                   </Badge>
                 ))}
@@ -310,11 +326,7 @@ export default function DatingApp() {
               <h3 className="text-lg font-medium mb-2">Domain</h3>
               <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {other.user_domain.map((skill: string) => (
-                  <Badge
-                    key={skill}
-                    variant="outline"
-                    className="text-xs sm:text-sm"
-                  >
+                  <Badge key={skill} variant="outline" className="text-xs sm:text-sm">
                     {skill}
                   </Badge>
                 ))}
@@ -328,11 +340,7 @@ export default function DatingApp() {
               <h3 className="text-lg font-medium mb-2">Sector</h3>
               <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {other.user_sector.map((skill: string) => (
-                  <Badge
-                    key={skill}
-                    variant="outline"
-                    className="text-xs sm:text-sm"
-                  >
+                  <Badge key={skill} variant="outline" className="text-xs sm:text-sm">
                     {skill}
                   </Badge>
                 ))}

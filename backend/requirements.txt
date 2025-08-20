@@ -1,10 +1,11 @@
 fastapi
-uvicorn 
-passlib[bcrypt] 
+uvicorn
+passlib[bcrypt]
+bcrypt==4.0.1
 python-jose
-bcrypt==4.0.1 
-dotenv
+python-dotenv
 supabase
 python-multipart
 sentence-transformers
 python-socketio
+redis>=5.0.0

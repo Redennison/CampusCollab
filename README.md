@@ -50,7 +50,14 @@ CampusCollab is a full-stack web application that helps university students conn
 `npm run dev`
 
 ### Backend
-Open a new terminal.\
+Open a new terminal.
+
+#### 1) Start Redis (required for rate limiting)
+Make sure Docker is running, then in a terminal: \
+`docker run -d --name redis -p 6379:6379 redis:7-alpine`
+
+#### 2) Run the API
+
 `cd backend`\
 `python3 -m venv venv`\
 `source venv/bin/activate`\
