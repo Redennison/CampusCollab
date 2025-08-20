@@ -12,6 +12,7 @@ CampusCollab is a full-stack web application that helps university students conn
 - **Onboarding** – Multi-step onboarding flow where users provide skills, interests, and profile info.
 - **Swiping Interface** – Swipe through curated recommendations and express interest by liking or skipping.
 - **Real-Time Chat** – Matched users can chat in real time using sockets.
+- **Spam Protection** – Redis token-bucket rate limiting with retryAfter feedback to the client.
 - **Profile Management** – Users can update their bio, skills, social links, and account credentials.
 
 ### 🤖 Smart Recommendations
