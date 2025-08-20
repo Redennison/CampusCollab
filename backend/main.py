@@ -1,4 +1,4 @@
-from auth import get_current_user, decode_jwt_user_id
+from auth import get_current_user
 from services import jwt_service
 from fastapi import FastAPI, HTTPException, UploadFile, File, Query
 from pydantic import BaseModel
