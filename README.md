@@ -24,6 +24,8 @@ CampusCollab is a full-stack web application that helps university students conn
 
 ## 🛠️ Tech Stack
 
+![System design diagram for CampusCollab](./architecture.png)
+
 ### Frontend
 - **Framework**: [Next.js](https://nextjs.org/)
 - **UI**: Tailwind CSS, Framer Motion, Radix UI, MUI, Lucide Icons
